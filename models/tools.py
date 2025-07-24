@@ -77,10 +77,8 @@ def get_news(symbols: str) -> list:
     Get recent financial news for the given stock symbols (comma-separated, e.g. 'AAPL,MSFT').
     Returns a list of headlines with URLs and sources.
     """
-    if symbols.strip():
-        endpoint = f"/stock_news?tickers={symbols}&limit=5"
-    else:
-        endpoint = "/stock_news?limit=5"
+
+    endpoint = "/fmp-articles?limit=5"
 
     return fetch_data(endpoint)
 
