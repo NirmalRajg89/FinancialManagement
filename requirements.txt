@@ -1,0 +1,17 @@
+langchain
+openai
+streamlit
+python-dotenv
+requests
+langchain-openai
+numerize
+yfinance
+pandas
+beautifulsoup4
+streamlit
+langchain
+openai
+faiss-cpu
+python-dotenv
+pypdf
+tiktoken
