@@ -4,9 +4,9 @@ import os
 import requests
 from langchain_core.tools import tool
 from dotenv import load_dotenv
-
+import streamlit as st
 load_dotenv()
-FINANCIAL_MODELING_PREP_API_KEY = os.getenv("FINANCIAL_MODELING_PREP_API_KEY")
+FINANCIAL_MODELING_PREP_API_KEY = st.secrets["FINANCIAL_MODELING_PREP_API_KEY"]
 
 BASE_URL = "https://financialmodelingprep.com/api/v3"
 

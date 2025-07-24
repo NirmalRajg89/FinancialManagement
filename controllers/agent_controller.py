@@ -17,12 +17,12 @@ from models.tools import (
     get_cash_flow,
     get_news,
 )
-
+import streamlit as st
 
 # Load .env only once
 def load_env():
     load_dotenv()
-    os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 
 # Create the agent executor
