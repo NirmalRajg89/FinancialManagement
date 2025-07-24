@@ -1,16 +1,16 @@
 import streamlit as st
 import speech_recognition as sr
-import pyttsx3
+
 
 # ---------------------- VOICE UTILS ---------------------- #
 
 # Initialize text-to-speech engine
-engine = pyttsx3.init()
+#engine = pyttsx3.init()
 
 def speak_text(text):
     """Speak assistant response using TTS"""
-    engine.say(text)
-    engine.runAndWait()
+    #engine.say(text)
+    #engine.runAndWait()
 
 def transcribe_audio():
     """Transcribe user's voice input"""
