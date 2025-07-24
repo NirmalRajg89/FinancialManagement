@@ -9,4 +9,5 @@ newsapi-python
 pypdf2
 # For image handling (if needed):
 pillow
+langchain_openai
 langchain_community
