@@ -1,14 +1,15 @@
 
 from langchain.prompts import ChatPromptTemplate
 import os
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from controllers.agent_controller import create_agent_executor
-
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 # Directory containing Rate.com PDFs
 docs_dir = os.path.join(os.path.dirname(__file__), '..', 'Rate.com')
 # Define agent types and their descriptions
@@ -35,7 +36,7 @@ CLASSIFY_PROMPT = ChatPromptTemplate.from_messages([
 def classify_query(query):
     agent_types_str = ", ".join([f"{a['name']}: {a['description']}" for a in AGENT_TYPES])
     prompt = CLASSIFY_PROMPT.format_messages(agent_types=agent_types_str, query=query)
-    response = llm(prompt)
+    response = llm.invoke(prompt)
     agent_type = response.content.strip().lower()
     return agent_type
 
@@ -79,5 +80,5 @@ def create_rag_agent():
 # Function to answer a question using the RAG agent
 def answer_ratecom_question(question):
     qa_chain = create_rag_agent()
-    result = qa_chain({"query": question})
+    result = qa_chain.invoke({"query": question})
     return result["result"]
