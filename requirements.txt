@@ -4,7 +4,7 @@ speechrecognition
 requests
 # If you use NewsAPI, include:
 newsapi-python
-# For PDF support (if needed for Rate.com PDFs):
+pypdf
 pypdf2
 pillow
 langgraph
