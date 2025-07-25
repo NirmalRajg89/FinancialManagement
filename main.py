@@ -116,37 +116,7 @@ def main():
                     output_placeholder.markdown(full_response + "▌")
                     time.sleep(0.01)
 
-                try:
-                    parsed_json = json.loads(output)
-                    if isinstance(parsed_json, list):
-                        df = pd.DataFrame(parsed_json)
-                        output_placeholder.empty()
-                        st.table(df)
-                    elif isinstance(parsed_json, dict):
-                        df = pd.DataFrame([parsed_json])
-                        output_placeholder.empty()
-                        st.table(df)
-                    else:
-                        raise ValueError("Unsupported JSON format")
-                except Exception:
-                    # Try parsing as Markdown table
-                    def parse_md_table(md_text):
-                        lines = [line.strip() for line in md_text.split('\n') if "|" in line]
-                        if len(lines) < 2:
-                            raise ValueError("Not a markdown table")
-                        headers = [h.strip() for h in lines[0].split("|") if h.strip()]
-                        data_rows = [
-                            [cell.strip() for cell in row.split("|") if cell.strip()]
-                            for row in lines[2:]
-                        ]
-                        return pd.DataFrame(data_rows, columns=headers)
-
-                    try:
-                        df = parse_md_table(full_response)
-                        output_placeholder.empty()
-                        st.table(df)
-                    except Exception:
-                        output_placeholder.markdown(full_response)
+                output_placeholder.markdown(full_response)
 
     else:
         # Get and display stock news in the main area
