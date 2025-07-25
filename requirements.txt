@@ -2,7 +2,7 @@ streamlit
 langchain
 speechrecognition
 requests
-# If you use NewsAPI, include:
+faiss
 newsapi-python
 pypdf
 pypdf2
@@ -10,3 +10,5 @@ pillow
 langgraph
 langchain_openai
 langchain_community
+OpenAIEmbeddings
+RetrievalQA
