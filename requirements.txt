@@ -2,7 +2,7 @@ streamlit
 langchain
 speechrecognition
 requests
-faiss
+faiss-cpu
 newsapi-python
 pypdf
 pypdf2
