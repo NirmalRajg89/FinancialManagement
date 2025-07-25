@@ -10,3 +10,4 @@ pillow
 langgraph
 langchain_openai
 langchain_community
+pandas

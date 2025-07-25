@@ -44,7 +44,8 @@ def create_agent_executor():
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a financial assistant. Use the get_news tool when the user asks about stock market headlines, financial news, or what's happening in the market today."),
+        ("system",
+         "You are a financial assistant. When returning comparisons or structured data, format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
         ("human", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
