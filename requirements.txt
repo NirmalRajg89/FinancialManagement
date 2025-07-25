@@ -7,5 +7,6 @@ newsapi-python
 # For PDF support (if needed for Rate.com PDFs):
 pypdf2
 pillow
+langgraph
 langchain_openai
 langchain_community
