@@ -1,15 +1,10 @@
 import base64
-import json
-
-import pandas as pd
 import streamlit as st
-
 from controllers.newsAPI_controller import get_stock_news
 from controllers.router_agent import route_query
-from controllers.voice_controller import transcribe_audio
 from langchain.schema import AIMessage, HumanMessage
 import time
-import os
+from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 
 
 def img_to_base64(image_path):
@@ -62,7 +57,7 @@ def main():
     st.sidebar.markdown("---")
 
     # Sidebar for Mode Selection
-    mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor"], index=1)
+    mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
 
     st.sidebar.markdown("---")
 
@@ -100,7 +95,7 @@ def main():
                 st.markdown(user_query)
 
             with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
+                with st.spinner("Getting expert advice......"):
                     output = route_query(user_query)
 
                 if isinstance(output, dict) and "output" in output:
@@ -117,6 +112,34 @@ def main():
                     time.sleep(0.01)
 
                 output_placeholder.markdown(full_response)
+    elif mode == "Fitness and Wellness":
+        st.title("🧘 Your Fitness & Wellness Coach")
+        st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
+
+        if "chat_history_wellness" not in st.session_state:
+            st.session_state.chat_history_wellness = []
+
+        for question, answer in st.session_state.chat_history_wellness:
+            with st.chat_message("user"):
+                st.markdown(question)
+            with st.chat_message("assistant"):
+                st.markdown(answer)
+                for link in extract_youtube_links(answer):
+                    st.video(link)
+
+        user_input = st.chat_input("What do you want help with today?")
+
+        if user_input:
+            st.chat_message("user").markdown(user_input)
+
+            with st.chat_message("assistant"):
+                with st.spinner("Getting expert advice..."):
+                    response = get_wellness_response(user_input)
+                    st.markdown(response)
+                    for link in extract_youtube_links(response):
+                        st.video(link)
+
+            st.session_state.chat_history_wellness.append((user_input, response))
 
     else:
         # Get and display stock news in the main area
