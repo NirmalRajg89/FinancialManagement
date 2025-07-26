@@ -5,7 +5,7 @@ from controllers.router_agent import route_query
 from langchain.schema import AIMessage, HumanMessage
 import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
-
+from streamlit_option_menu import option_menu
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -56,14 +56,25 @@ def main():
 
     st.sidebar.markdown("---")
 
+    with st.sidebar:
+        mode = option_menu(
+            menu_title="Main Menu",
+            options=["Latest Stock News", "Financial Advisor", "Fitness & Wellness"],
+            icons=["clipboard-data", "cash-coin", "heart-pulse-fill"],
+            menu_icon="cast",
+            default_index=0,
+            # orientation = "horizontal",
+        )
+
+
     # Sidebar for Mode Selection
-    mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
+    #mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
 
     st.sidebar.markdown("---")
 
     # Add vertical space to push the logo to the bottom
     st.sidebar.markdown("<div style='flex:1'></div>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br><br><br><br><br><br><br><br><br><br><br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
+    st.sidebar.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
 
     # Display the altimetrik logo at the bottom of the sidebar
     img_path = "imgs/altimetrik.png"
@@ -112,7 +123,7 @@ def main():
                     time.sleep(0.01)
 
                 output_placeholder.markdown(full_response)
-    elif mode == "Fitness and Wellness":
+    elif mode == "Fitness & Wellness":
         st.title("🧘 Your Fitness & Wellness Coach")
         st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
 
