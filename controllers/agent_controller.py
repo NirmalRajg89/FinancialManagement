@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -26,7 +26,7 @@ def load_env():
 
 
 # Create the agent executor
-def create_agent_executor():
+def create_agent_executor(question, memory=None):
     load_env()  # Ensure env is loaded
 
     llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
@@ -41,7 +41,7 @@ def create_agent_executor():
         get_news,
     ]
 
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    memory = memory or ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
@@ -52,4 +52,7 @@ def create_agent_executor():
     ])
 
     agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
-    return AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+    executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+
+    result = executor.invoke({"input": question})
+    return result["output"]

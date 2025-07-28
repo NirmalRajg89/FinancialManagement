@@ -12,3 +12,5 @@ langchain_openai
 langchain_community
 pandas
 streamlit-option-menu
+qdrant_client
+langchain-qdrant

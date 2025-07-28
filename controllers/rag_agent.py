@@ -6,7 +6,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from controllers.agent_controller import create_agent_executor
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)

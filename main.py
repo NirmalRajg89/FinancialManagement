@@ -1,11 +1,12 @@
 import base64
 import streamlit as st
 from controllers.newsAPI_controller import get_stock_news
-from controllers.router_agent import route_query
+# from controllers.router_agent import route_query
 from langchain.schema import AIMessage, HumanMessage
 import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from streamlit_option_menu import option_menu
+from controllers.router_graph import app
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -107,10 +108,13 @@ def main():
 
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice......"):
-                    output = route_query(user_query)
+                    # output = route_query(user_query)
+                    response = app.invoke({"question": user_query})
+                    print(response)
+                    output = response.get("answer", "Sorry, something went wrong.")
 
-                if isinstance(output, dict) and "output" in output:
-                    output = output["output"]
+                # if isinstance(output, dict) and "output" in output:
+                #     output = output["output"]
 
                 ai_msg = AIMessage(content=output)
                 st.session_state.chat_history.append(ai_msg)
@@ -123,6 +127,7 @@ def main():
                     time.sleep(0.01)
 
                 output_placeholder.markdown(full_response)
+
     elif mode == "Fitness & Wellness":
         st.title("🧘 Your Fitness & Wellness Coach")
         st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
