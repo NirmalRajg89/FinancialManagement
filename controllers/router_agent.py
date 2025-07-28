@@ -42,16 +42,28 @@ CLASSIFY_PROMPT = ChatPromptTemplate.from_messages([
 ])
 
 
-def classify_query(query):
-    agent_types_str = ", ".join([f"{a['name']}: {a['description']}" for a in AGENT_TYPES])
-    prompt = CLASSIFY_PROMPT.format_messages(agent_types=agent_types_str, query=query)
-    response = llm(prompt)
+def classify_query(query: str) -> list[str]:
+    # Combine all agent descriptions into a single string
+    agent_descriptions = ", ".join([
+        f"{agent['name']}: {agent['description']}" for agent in AGENT_TYPES
+    ])
 
-    # Parse and sanitize the response
-    raw_output = response.content.strip().lower()
-    routes = [r.strip() for r in raw_output.split(",") if r.strip() in VALID_ROUTES]
+    # Format the prompt using the agent types and user query
+    prompt_messages = CLASSIFY_PROMPT.format_messages(
+        agent_types=agent_descriptions,
+        query=query
+    )
 
-    if not routes:
-        return ["out_of_scope"]
+    # Send prompt to the LLM
+    response = llm(prompt_messages)
 
-    return routes
+    # Parse the response: e.g., "gbi, stocks" → ["gbi", "stocks"]
+    raw_routes = response.content.split(",")
+    routes = [route.strip().lower() for route in raw_routes]
+
+    # Filter only valid agent names
+    valid_agent_names = [agent["name"] for agent in AGENT_TYPES]
+    filtered_routes = [route for route in routes if route in valid_agent_names]
+
+    return filtered_routes
+
