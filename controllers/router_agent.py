@@ -25,16 +25,33 @@ AGENT_TYPES = [
     }
 ]
 
+VALID_ROUTES = {a["name"] for a in AGENT_TYPES}
+
 # LLM-based classifier for routing
 llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
 
 CLASSIFY_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", "You are a router that classifies user queries into one of the following agent types: {agent_types}. Respond ONLY with the agent type name (e.g., 'gbi', 'rate', 'stocks', 'generic', 'out_of_scope'). Do not explain your answer."),
+    ("system", """
+        You are a router that classifies user queries into one or more of the following agent types based on the content:
+        {agent_types}
+
+        Respond ONLY with a comma-separated list of the agent type names that are most relevant to answering the query.
+        Do not explain your answer. Example: "gbi,stocks"
+    """),
     ("human", "{query}")
 ])
+
 
 def classify_query(query):
     agent_types_str = ", ".join([f"{a['name']}: {a['description']}" for a in AGENT_TYPES])
     prompt = CLASSIFY_PROMPT.format_messages(agent_types=agent_types_str, query=query)
     response = llm(prompt)
-    return response.content.strip().lower()
+
+    # Parse and sanitize the response
+    raw_output = response.content.strip().lower()
+    routes = [r.strip() for r in raw_output.split(",") if r.strip() in VALID_ROUTES]
+
+    if not routes:
+        return ["out_of_scope"]
+
+    return routes
