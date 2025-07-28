@@ -24,16 +24,18 @@ def route_node(state: AgentState):
     return {"route": route}
 
 def gbi_node(state: AgentState):
-    return {"answer": GBI_RAG_agent(state["question"])}
+    response = GBI_RAG_agent(state["question"])
+    return {"answer": response["result"]}
 
 def rate_node(state: AgentState):
-    return {"answer": Rate_RAG_agent(state["question"])}
+    response = Rate_RAG_agent(state["question"])
+    return {"answer": response["result"]}
 
 def stocks_node(state: AgentState):
     return {"answer": create_agent_executor(state["question"])}
 
 def generic_node(state: AgentState):
-    return {"answer": "This is a generic question. A generic LLM agent can answer this."}
+    return {"answer": "I'm here to assist with financial-investments-related questions. This appears to be a general inquiry, which falls outside the scope of my expertise."}
 
 def oos_node(state: AgentState):
     return {"answer": "This question is out of scope. Please try a different question."}

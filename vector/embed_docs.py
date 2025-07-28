@@ -10,6 +10,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from qdrant_client import QdrantClient
 
+# Collections name gbi_agent -> GBI_docs && rate_agent -> Rate_docs
+
 load_dotenv()
 
 OPENAI_API_KEY=os.getenv('OPENAI_API_KEY')
@@ -19,7 +21,6 @@ QDRANT_API_KEY=os.getenv('QDRANT_API_KEY')
 # 1. Load documents
 docs = []
 
-# md_dir = os.path.join("..", "gbi_knowledge_base")  # folder parallel to 'vector/'
 md_dir = os.path.join("..", "gbi_knowledge_base")  # folder parallel to 'vector/'
 
 for file in os.listdir(md_dir):
