@@ -17,74 +17,108 @@ def img_to_base64(image_path):
         print(f"Error converting image to base64: {str(e)}")
         return None
 def main():
-    st.set_page_config(layout="wide")
-    st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰")
-    # Always initialize chat_history if not present
+    st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰", layout="centered")
+
+    # Override the max width of the central chat container to match ChatGPT
+    st.markdown("""
+            <style>
+            /* Main chat content area */
+            .block-container {
+                max-width: 900px !important;
+                margin: 0 auto;
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+            .block-container > div:first-child {
+                padding-top: 0rem !important;
+                margin-top: 0rem !important;
+            }
+
+            h1 {
+                margin-top: 0rem !important;
+                padding-top: 0rem !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
 
         # Insert custom CSS for glowing effect
-    st.markdown(
-        """
+    st.markdown("""
         <style>
+        /* Sidebar as a full-height flex column */
+        # [data-testid="stSidebar"] > div:first-child {
+        #     display: flex;
+        #     flex-direction: column;
+        #     justify-content: space-between;
+        #     height: 100%;
+        # }
+        [data-testid="stSidebarUserContent"] > div:first-child > [data-testid="stVerticalBlock"] {
+            height: 80vh !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+
+        .sidebar-header, .sidebar-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .sidebar-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 1.5rem;
+            padding: 10px 0;
+        }
+
         .cover-glow {
             width: 100%;
-            height: auto;
             padding: 3px;
-            box-shadow: 
-                0 0 5px #330000,
-                0 0 10px #660000,
-                0 0 15px #990000,
-                0 0 20px #CC0000,
-                0 0 25px #FF0000,
-                0 0 30px #FF3333,
-                0 0 35px #FF6666;
-            position: relative;
-            z-index: -1;
             border-radius: 45px;
         }
         </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
 
-    # Load and display sidebar image
-    img_path = "imgs/rate_logo1.png"
-    img_base64 = img_to_base64(img_path)
-    if img_base64:
-        st.sidebar.markdown(
-            f'<img src="data:image/png;base64,{img_base64}" class="cover-glow">',
-            unsafe_allow_html=True,
-        )
+    # -- Load Image Assets --
+    rate_logo_path = "imgs/rate_logo1.png"
+    altimetrik_logo_path = "imgs/altimetrik.png"
 
-    st.sidebar.markdown("---")
+    rate_logo_b64 = img_to_base64(rate_logo_path)
+    altimetrik_logo_b64 = img_to_base64(altimetrik_logo_path)
 
+    # -- Render Sidebar Layout --
+    # Load and convert logo images to base64
+    rate_logo_b64 = img_to_base64("imgs/rate_logo1.png")
+    altimetrik_logo_b64 = img_to_base64("imgs/altimetrik.png")
+
+    # Render sidebar content
     with st.sidebar:
-        mode = option_menu(
-            menu_title="Main Menu",
-            options=["Latest Stock News", "Financial Advisor", "Fitness & Wellness"],
-            icons=["clipboard-data", "cash-coin", "heart-pulse-fill"],
-            menu_icon="cast",
-            default_index=0,
-            # orientation = "horizontal",
-        )
+        # -- Header: Rate.com Logo --
+        if rate_logo_b64:
+            st.markdown(f"""
+            <div class="sidebar-header">
+                <img src="data:image/png;base64,{rate_logo_b64}" class="cover-glow">
+            </div>
+            """, unsafe_allow_html=True)
 
+        # -- Middle Content --
+        st.markdown("<div class='sidebar-content'>", unsafe_allow_html=True)
+        st.markdown("---")
+        mode = st.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor"], index=1)
+        st.markdown("---")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Sidebar for Mode Selection
-    #mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
-
-    st.sidebar.markdown("---")
-
-    # Add vertical space to push the logo to the bottom
-    st.sidebar.markdown("<div style='flex:1'></div>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
-
-    # Display the altimetrik logo at the bottom of the sidebar
-    img_path = "imgs/altimetrik.png"
-    img_base64 = img_to_base64(img_path)
-    if img_base64:
-        st.sidebar.markdown(
-            f'<img src="data:image/png;base64,{img_base64}">',
-            unsafe_allow_html=True,
-        )
+        # -- Footer: Altimetrik Logo --
+        if altimetrik_logo_b64:
+            st.markdown(f"""
+            <div class="sidebar-footer">
+                <img src="data:image/png;base64,{altimetrik_logo_b64}" width="130">
+            </div>
+            """, unsafe_allow_html=True)
 
     if mode == "Financial Advisor":
         st.title("💼 Financial Advisor")
@@ -92,70 +126,167 @@ def main():
             st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
 
             # Now it's safe to display chat history
+        # Show chat history
+        # Show chat history
         for message in st.session_state.chat_history:
             role = "assistant" if isinstance(message, AIMessage) else "user"
-            with st.chat_message(role):
-                st.markdown(message.content)
 
+            if role == "user":
+                with st.container():
+                    st.markdown(
+                        f"""
+                        <div style='
+                            display: flex;
+                            justify-content: flex-end;
+                            margin-bottom: 20px;
+                            width: 100%;
+                        '>
+                            <div style='
+                                background-color: #F0F0F0;
+                                color: black;
+                                padding: 10px 15px;
+                                border-radius: 15px;
+                                max-width: 500px;
+                                word-wrap: break-word;
+                                font-size: 16px;
+                                line-height: 2;
+                                text-align: justify;
+                            '>
+                                {message.content}
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+            else:
+                with st.container():
+                    st.markdown(
+                        f"""
+                        <div style='
+                            display: flex;
+                            justify-content: flex-start;
+                            margin-bottom: 20px;
+                            width: 100%;
+                        '>
+                            <div style='
+                                font-size: 16px;
+                                line-height: 2;
+                                text-align: justify;
+                                width: 100%;
+                            '>
+                                {message.content}
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+        st.markdown("""
+            <style>
+            /* Set the main chat input width */
+            div[data-testid="stBottomBlockContainer"] {
+                max-width: 900px !important;
+                margin: 0 auto;
+            }
+
+            /* Optional: remove top padding */
+            div[data-testid="stChatInput"] {
+                padding-top: 0rem;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # Input
         user_query = st.chat_input("Your message")
 
         if user_query:
+            # Append and show user message
             human_msg = HumanMessage(content=user_query)
             st.session_state.chat_history.append(human_msg)
 
-            with st.chat_message("user"):
-                st.markdown(user_query)
+            with st.container():
+                st.markdown(
+                    f"""
+                    <div style='
+                        display: flex;
+                        justify-content: flex-end;
+                        margin-bottom: 20px;
+                        width: 100%;
+                    '>
+                        <div style='
+                            background-color: #F0F0F0;
+                            color: black;
+                            padding: 10px 15px;
+                            border-radius: 15px;
+                            max-width: 500px;
+                            word-wrap: break-word;
+                            font-size: 16px;
+                            line-height: 2;  
+                        '>
+                            {user_query}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            with st.chat_message("assistant"):
-                with st.spinner("Getting expert advice......"):
-                    # output = route_query(user_query)
-                    response = app.invoke({"question": user_query})
-                    print(response)
-                    output = response.get("answer", "Sorry, something went wrong.")
+            with st.spinner("Thinking..."):
+                output = route_query(user_query)
 
-                # if isinstance(output, dict) and "output" in output:
-                #     output = output["output"]
+            if isinstance(output, dict) and "output" in output:
+                output = output["output"]
 
-                ai_msg = AIMessage(content=output)
-                st.session_state.chat_history.append(ai_msg)
+            ai_msg = AIMessage(content=output)
+            st.session_state.chat_history.append(ai_msg)
 
-                output_placeholder = st.empty()
-                full_response = ""
-                for char in output:
-                    full_response += char
-                    output_placeholder.markdown(full_response + "▌")
-                    time.sleep(0.01)
+            # Stream assistant response
+            full_response = ""
+            output_placeholder = st.empty()
 
-                output_placeholder.markdown(full_response)
+            for char in output:
+                full_response += char
+                output_placeholder.markdown(
+                    f"""
+                    <div style='
+                        display: flex;
+                        justify-content: flex-start;
+                        margin-bottom: 10px;
+                        width: 100%;
+                    '>
+                        <div style='
+                            font-size: 16px;
+                            line-height: 2;
+                            text-align:justify;
+                            width: 100%;
+                        '>
+                            {full_response}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                time.sleep(0.01)
 
-    elif mode == "Fitness & Wellness":
-        st.title("🧘 Your Fitness & Wellness Coach")
-        st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
-
-        if "chat_history_wellness" not in st.session_state:
-            st.session_state.chat_history_wellness = []
-
-        for question, answer in st.session_state.chat_history_wellness:
-            with st.chat_message("user"):
-                st.markdown(question)
-            with st.chat_message("assistant"):
-                st.markdown(answer)
-                for link in extract_youtube_links(answer):
-                    st.video(link)
-
-        user_input = st.chat_input("What do you want help with today?")
-
-        if user_input:
-            st.chat_message("user").markdown(user_input)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Getting expert advice..."):
-                    response = get_wellness_response(user_input)
-                    st.markdown(response)
-                    for link in extract_youtube_links(response):
-                        st.video(link)
-
-            st.session_state.chat_history_wellness.append((user_input, response))
+            # Final assistant message (no typing cursor)
+            output_placeholder.markdown(
+                f"""
+                <div style='
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-bottom: 10px;
+                    width: 100%;
+                '>
+                    <div style='
+                        font-size: 16px;
+                        line-height: 1.5;
+                        width: 100%;
+                    '>
+                        {full_response}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     else:
         # Get and display stock news in the main area
