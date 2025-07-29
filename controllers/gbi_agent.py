@@ -1,6 +1,7 @@
 import os
 
 from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai  import ChatOpenAI
@@ -27,9 +28,17 @@ def GBI_RAG_agent(question, memory=None):
         client=client,
         collection_name="GBI_docs",
         embeddings=embeddings,
-        content_payload_key="text",  # or "page_content", if that's your field
+        content_payload_key="text",
     )
-
+    prompt = PromptTemplate(
+        input_variables=["context", "question"],
+        template=(
+            "You are a helpful assistant that answers clearly and concisely. "
+            "Use bullet points, numbered steps, or markdown tables.\n\n"
+            "Use the following context to answer the question:\n{context}\n\n"
+            "Question: {question}"
+        )
+    )
     retriever = qdrant.as_retriever()
 
     llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
@@ -39,6 +48,7 @@ def GBI_RAG_agent(question, memory=None):
         retriever=retriever,
         memory=memory,
         return_source_documents=False,
+        combine_docs_chain_kwargs={"prompt": prompt},
         verbose=True  # Optional for debugging
     )
     response = qa_chain.invoke({"question": question})
