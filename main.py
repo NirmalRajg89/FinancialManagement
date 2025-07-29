@@ -75,9 +75,9 @@ def main():
 
     with st.sidebar:
         mode = option_menu(
-            menu_title="Main Menu",
-            options=["Latest Stock News", "Financial Advisor", "Fitness & Wellness"],
-            icons=["clipboard-data", "cash-coin", "heart-pulse-fill"],
+            menu_title="Menu",
+            options=["Stock News", "Financial Advisor", "Fitness Wellness"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill"],
             menu_icon="cast",
             default_index=0,
             # orientation = "horizontal",
@@ -91,7 +91,7 @@ def main():
 
     # Add vertical space to push the logo to the bottom
     st.sidebar.markdown("<div style='flex:1'></div>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
+    st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)  # Adjust as needed
 
     # Display the altimetrik logo at the bottom of the sidebar
     img_path = "imgs/altimetrik.png"
@@ -156,7 +156,7 @@ def main():
                     time.sleep(0.01)
                 output_placeholder.markdown(full_response)
 
-    elif mode == "Fitness & Wellness":
+    elif mode == "Fitness Wellness":
         st.title("🧘 Your Fitness & Wellness Coach")
         st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
 
@@ -179,30 +179,56 @@ def main():
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice..."):
                     response = get_wellness_response(user_input)
-                    st.markdown(response)
+                    #st.markdown(response)
+                    output_placeholder = st.empty()
+                    full_response = ""
+                    for char in response:
+                        full_response += char
+                        output_placeholder.markdown(full_response + "▌")
+                        time.sleep(0.01)
                     for link in extract_youtube_links(response):
                         st.video(link)
-
+            output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
 
     else:
-        # Get and display stock news in the main area
-        with st.spinner("Fetching latest stock news..."):
-            news_response = get_stock_news()
+        # Handle initial state
+        if "refresh_news" not in st.session_state:
+            st.session_state.refresh_news = True
+        if "news_data" not in st.session_state:
+            st.session_state.news_data = []
+
+        # Heading with refresh button on the right
+        col1, col2 = st.columns([10, 3])
+        with col1:
             st.markdown("## 📰 Latest Stock Updates")
-            if isinstance(news_response, list):
-                for article in news_response:
-                    source = article.get("source", {})
-                    st.markdown(f"### [{article.get('title', 'No Title')}]({article.get('url', '')})")
-                    if article.get("urlToImage"):
-                        st.image(article["urlToImage"], width=400)
-                    st.markdown(f"**Source:** {source.get('name', 'Unknown')}")
-                    st.markdown(f"**Author:** {article.get('author', 'Unknown')}")
-                    st.markdown(f"**Published at:** {article.get('publishedAt', 'Unknown')}")
-                    st.markdown(f"{article.get('description', '')}")
-                    st.markdown('---')
-            else:
-                st.write(news_response)
+        with col2:
+            if st.button("## ♻️ Update News", help="Refresh News"):
+                st.session_state.refresh_news = True
+
+        # Fetch news if needed
+        if st.session_state.refresh_news:
+            with st.spinner("Fetching latest stock news..."):
+                news_response = get_stock_news()
+                st.session_state.news_data = news_response
+                st.session_state.refresh_news = False
+
+        # Display news
+        news_response = st.session_state.news_data
+        if isinstance(news_response, list):
+            for article in news_response:
+                source = article.get("source", {})
+                st.markdown(f"### [{article.get('title', 'No Title')}]({article.get('url', '')})")
+                if article.get("urlToImage"):
+                    st.image(article["urlToImage"], width=400)
+                st.markdown(f"**Source:** {source.get('name', 'Unknown')}")
+                st.markdown(f"**Author:** {article.get('author', 'Unknown')}")
+                st.markdown(f"**Published at:** {article.get('publishedAt', 'Unknown')}")
+                st.markdown(f"{article.get('description', '')}")
+                st.markdown('---')
+        else:
+            st.write(news_response)
+
 
 if __name__ == "__main__":
     main()
