@@ -3,13 +3,17 @@ from langchain.prompts import ChatPromptTemplate
 
 # Define agent types and their descriptions
 AGENT_TYPES = [
+    # {
+    #     "name": "allocator",
+    #     "description": "Lifecycle/Target Date Fund asset allocation questions."
+    # },
     {
         "name": "gbi",
-        "description": "Goal-based investment questions, including financial planning, goals, and asset allocation."
+        "description": "Goal-based investment questions, including financial planning, goals, and Lifecycle/Target Date Fund asset allocation questions."
     },
     {
         "name": "rate",
-        "description": "Questions about Rate.com, its documents, policies, or company information."
+        "description": "Questions about HELOC (Home Equity Line of Credit) and it's rates, reverse mortgage, HECM (Home Equity Conversion Mortgage), requirements for a credit score on a personal loan, and Rate.com its documents, policies, or company information."
     },
     {
         "name": "stocks",
@@ -17,7 +21,7 @@ AGENT_TYPES = [
     },
     {
         "name": "generic",
-        "description": "General knowledge or questions that any assistant can answer."
+        "description": "Information provided instead of asking a question."
     },
     {
         "name": "out_of_scope",

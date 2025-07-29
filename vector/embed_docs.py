@@ -24,19 +24,26 @@ docs = []
 md_dir = os.path.join("..", "gbi_knowledge_base")  # folder parallel to 'vector/'
 
 for file in os.listdir(md_dir):
-    if file.endswith(".md") or file.endswith(".pdf"):
+    if file.endswith((".md", ".pdf", ".txt")):
         path = os.path.join(md_dir, file)
-        if file.endswith(".md"):
-            loader = TextLoader(path)
-        elif file.endswith(".pdf"):
-            loader = PyPDFLoader(path)
-        elif file.endswith(".txt"):
-            loader = TextLoader(path)
-        docs.extend(loader.load())
+        try:
+            if file.endswith(".pdf"):
+                loader = PyPDFLoader(path)
+            else:
+                loader = TextLoader(path)
+            docs.extend(loader.load())
+        except Exception as e:
+            print(f"⚠️ Failed to load {file}: {e}")
+
+if not docs:
+    raise ValueError("No documents loaded! Check directory and file formats.")
 
 # 2. Split documents into chunks
 splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=80)
 splits = splitter.split_documents(docs)
+print(f"Split into {len(splits)} chunks.")
+if not splits:
+    print("⚠️ No splits generated! Check document loading.")
 
 # 3. Generate text chunks and deterministic IDs
 def hash_chunk(doc):

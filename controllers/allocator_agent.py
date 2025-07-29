@@ -1,9 +1,10 @@
 import os
 
 from dotenv import load_dotenv
+from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import OpenAIEmbeddings
-from langchain.chains import RetrievalQA, ConversationalRetrievalChain
-from langchain_openai import ChatOpenAI
+from langchain.chains import RetrievalQA
+from langchain_openai  import ChatOpenAI
 from langchain_qdrant import Qdrant
 from qdrant_client import QdrantClient
 
@@ -12,8 +13,7 @@ load_dotenv()
 QDRANT_URL=os.getenv('QDRANT_URL')
 QDRANT_API_KEY=os.getenv('QDRANT_API_KEY')
 
-
-def Rate_RAG_agent(question, memory=None):
+def Allocator_RAG_agent(question, memory=None):
     embeddings = OpenAIEmbeddings()
 
     # Step 1: Qdrant client
@@ -25,7 +25,7 @@ def Rate_RAG_agent(question, memory=None):
     # Step 2: Langchain wrapper for retriever
     qdrant = Qdrant(
         client=client,
-        collection_name="Rate_docs",
+        collection_name="Allocation_docs",
         embeddings=embeddings,
         content_payload_key="text",  # or "page_content", if that's your field
     )

@@ -1,0 +1,92 @@
+Here's the flattened, LLM-readable text version of your JSON:
+
+---
+
+### **Fund Type**
+- **Lifecycle/Target Date Fund**
+
+### **Core Parameters**
+
+#### **Equities Allocation by Age**
+- **Young Investors (20-30 years):** 80-95%
+- **Mid-Career (30-50 years):** 60-80%
+- **Pre-retirement (50-65 years):** 40-60%
+- **Retirement (65-100 years):** 20-40%
+
+#### **Equities Subcategories**
+- **Domestic Equities:** 60-80% of equities
+- **International Equities:** 20-40% of equities
+- **Small Cap Bias Adjustment:** +/- 5% to domestic equities
+
+#### **Bonds Allocation by Age**
+- **Young Investors (20-30 years):** 5-20%
+- **Mid-career (30-50 years):** 20-40%
+- **Pre-retirement (50-65 years):** 40-60%
+- **Retirement (65-100 years):** 60-80%
+
+#### **Bonds Subcategories**
+- **Government Bonds:** 50-70% of bonds
+- **Corporate Bonds:** 20-40% of bonds
+- **TIPS (Treasury Inflation-Protected Securities):** 5-15% of bonds (phased in at age 50)
+
+#### **Cash Allocation by Age**
+- **Young Investors (20-30 years):** 0-5%
+- **Mid-career (30-50 years):** 0-5%
+- **Pre-retirement (50-65 years):** 5-10%
+- **Retirement (65-100 years):** 10-20%
+
+### **Glide Path Profiles**
+1. **Aggressive:**
+   - Equities at retirement: 40%
+   - Bonds at retirement: 55%
+   - Cash at retirement: 5%
+   - Shift triggers: 10 years pre-retirement, market volatility
+
+2. **Moderate:**
+   - Equities at retirement: 50%
+   - Bonds at retirement: 45%
+   - Cash at retirement: 5%
+   - Shift triggers: 20 years pre-retirement, annual rebalance
+
+3. **Conservative:**
+   - Equities at retirement: 30%
+   - Bonds at retirement: 65%
+   - Cash at retirement: 5%
+   - Shift triggers: 30 years pre-retirement, inflation spike
+
+### **Tax Efficiency Rules**
+- **Tax-Advantaged Accounts (e.g., 401k, IRA):**
+  - Recommended: Bonds, TIPS
+  - Rationale: Minimizes taxable interest income.
+- **Taxable Accounts (e.g., Brokerage):**
+  - Recommended: Equities, International Equities
+  - Rationale: Lower dividend tax rates, foreign tax credits.
+
+### **Cost Parameters**
+- **Expense Ratio Range:** 0.05% to 0.15%
+- **Common Fees:** Management fee, 12b-1 fee
+- **Low-Cost Providers:** Vanguard, Fidelity, Schwab
+
+### **Rebalancing Rules**
+- **Frequency:** Annual or semi-annual
+- **Threshold-Based Rebalancing:**
+  - Trigger: 5% deviation from target
+  - Exceptions: Tax-harvesting opportunities
+
+### **Performance Benchmarks**
+- **Equities Benchmark:** MSCI ACWI
+- **Bonds Benchmark:** Bloomberg Aggregate Bond Index
+- **Target Real Return (After Inflation):**
+  - Young Investors: 5.0%
+  - Retirement: 2.5%
+
+### **Query Examples**
+1. **Input:** "How should a 40-year-old allocate assets in a taxable account?"
+   **Output Logic:** Prioritize equities (70-75%) with international exposure (20-30% of equities). Bonds (25-30%) should go in tax-advantaged accounts.
+
+2. **Input:** "What's the expense ratio range for target date funds?"
+   **Output Logic:** Typically 0.05% to 0.15%. Low-cost providers include Vanguard and Fidelity.
+
+---
+
+This format is optimized for readability and LLM processing. Let me know if you'd like further refinements!

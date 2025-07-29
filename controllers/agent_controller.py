@@ -41,18 +41,31 @@ def create_agent_executor(question, memory=None):
         get_news,
     ]
 
-    memory = memory or ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    # Initialize memory with consistent input/output keys
+    memory = memory or ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True,
+        input_key="question",  # Must match prompt input key
+        output_key="answer"  # Must match agent output key
+    )
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
          "You are a financial assistant. When returning comparisons or structured data, format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
-        ("human", "{input}"),
+        ("human", "{question}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
     agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
-    executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+    executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        memory=memory,
+        verbose=True,
+        return_intermediate_steps=False
+    )
 
-    result = executor.invoke({"input": question})
+    result = executor.invoke({"question": question})
+    print(str(result))
     return result["output"]

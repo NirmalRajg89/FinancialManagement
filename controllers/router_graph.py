@@ -1,16 +1,22 @@
 from langchain.memory import ConversationBufferMemory
+from langchain.schema import HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END
 from typing import Literal, TypedDict, Optional, Any
 
 from controllers.agent_controller import create_agent_executor
+from controllers.memory_agent import memory_agent
 from controllers.router_agent import classify_query
 from controllers.gbi_agent import GBI_RAG_agent
 from controllers.rate_agent import Rate_RAG_agent
-# from langchain.prompts import ChatPromptTemplate
-# from langchain_core.output_parsers import StrOutputParser
-# from langchain_openai import ChatOpenAI  # or your preferred LLM
 
 ROUTE_TYPES = ["gbi", "rate", "stocks", "generic", "out_of_scope"]
+
+shared_memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True,
+    input_key="question",
+    max_token_limit=2000  # Prevent memory from growing too large
+)
 
 class AgentState(TypedDict):
     question: str
@@ -18,8 +24,7 @@ class AgentState(TypedDict):
     current_route: str  # Track current route separately
     answer: str
     intermediate: dict[str, str]  # Store single answer per route
-    memory: Optional[Any]
-
+    memory: Optional[ConversationBufferMemory]
 
 def route_node(state: AgentState) -> dict:
     routes = classify_query(state["question"])
@@ -37,18 +42,24 @@ def agent_node(state: AgentState):
     route = state["current_route"]
     print(f"[{route.capitalize()} Node] Processing")
 
+    state["memory"] = shared_memory  # Use shared memory instance
+
     if route == "gbi":
-        result = GBI_RAG_agent(state["question"])
+        result = GBI_RAG_agent(state["question"], memory=state["memory"])
     elif route == "rate":
-        result = Rate_RAG_agent(state["question"])
+        result = Rate_RAG_agent(state["question"], memory=state["memory"])
     elif route == "stocks":
         gbi_context = state["intermediate"].get("gbi", "")
         enriched_question = f"{gbi_context}\n\n{state['question']}" if gbi_context else state["question"]
-        result = create_agent_executor(enriched_question)
+        result = create_agent_executor(enriched_question, memory=state["memory"])
     elif route == "generic":
-        result = {"result": "I'm here to assist with financial-investments-related questions."}
+        result = {"result": "Thank you. The provided information has been noted."}
     else:  # out_of_scope
-        result = {"result": "This question is out of scope."}
+        if "memory" in state and state["memory"] is not None:
+            result = memory_agent(state["question"], chat_history = state["memory"].load_memory_variables({}).get("chat_history", ""))
+        else:
+            result = {
+                "result": "I'm here to assist with financial-investments-related questions only and this query seems to be out-of-scope."}
 
     state["intermediate"][route] = result if route == "stocks" else result["result"]
     return {}
@@ -72,6 +83,15 @@ def merge_results(state: AgentState):
             answers.append(answer)
 
     final_answer = "\n\n".join(answers)
+
+    # Use the pre-initialized shared memory
+    global shared_memory
+    try:
+        shared_memory.chat_memory.add_user_message(state["question"])
+        shared_memory.chat_memory.add_ai_message(final_answer)
+    except Exception as e:
+        print(f"Memory update error: {str(e)}")
+
     print(f"[Merge Node] Final answer:\n{final_answer}")
     return {"answer": final_answer}
 
@@ -151,13 +171,22 @@ graph.add_edge("merge", END)
 app = graph.compile()
 
 if __name__ == "__main__":
-    question = input("Ask a question: ")
-    result = app.invoke({
-        "question": question,
-        "routes": [],
-        "current_route": None,
-        "answer": "",
-        "intermediate": {},
-        "memory": ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    })
-    print("\nFinal Response:\n", result["answer"])
+    print("Starting financial assistant. Type 'exit' to end the session.\n")
+
+    while True:
+        question = input("Ask a question: ")
+        if question.lower() in ['exit', 'quit']:
+            print("\nFinal conversation history:")
+            # print_memory(memory)
+            break
+
+        result = app.invoke({
+            "question": question,
+            "routes": [],
+            "current_route": None,
+            "answer": "",
+            "intermediate": {},
+            "memory": shared_memory  # Reuse the same memory instance
+        })
+
+        print("\nFinal Response:\n", result["answer"])

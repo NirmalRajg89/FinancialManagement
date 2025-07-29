@@ -6,6 +6,7 @@ from langchain.chains import RetrievalQA
 from langchain_openai  import ChatOpenAI
 from langchain_qdrant import Qdrant
 from qdrant_client import QdrantClient
+from langchain.chains import ConversationalRetrievalChain
 
 load_dotenv()
 
@@ -33,11 +34,12 @@ def GBI_RAG_agent(question, memory=None):
 
     llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
 
-    qa_chain = RetrievalQA.from_chain_type(
+    qa_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
+        memory=memory,
         return_source_documents=False,
-        memory=memory,  # optionally include memory
+        verbose=True  # Optional for debugging
     )
-
-    return qa_chain.invoke(question)
+    response = qa_chain.invoke({"question": question})
+    return {"result": response["answer"]}
