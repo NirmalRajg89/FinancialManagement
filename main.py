@@ -151,10 +151,16 @@ def main():
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice..."):
                     response = get_wellness_response(user_input)
-                    st.markdown(response)
+                    #st.markdown(response)
+                    output_placeholder = st.empty()
+                    full_response = ""
+                    for char in response:
+                        full_response += char
+                        output_placeholder.markdown(full_response + "▌")
+                        time.sleep(0.01)
                     for link in extract_youtube_links(response):
                         st.video(link)
-
+            output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
 
     else:
