@@ -61,7 +61,7 @@ def main():
         mode = option_menu(
             menu_title="Main Menu",
             options=["Latest Stock News", "Financial Advisor", "Fitness & Wellness"],
-            icons=["clipboard-data", "cash-coin", "heart-pulse-fill"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill"],
             menu_icon="cast",
             default_index=0,
             # orientation = "horizontal",
@@ -75,7 +75,7 @@ def main():
 
     # Add vertical space to push the logo to the bottom
     st.sidebar.markdown("<div style='flex:1'></div>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
+    st.sidebar.markdown("<br><br><br><br><br>", unsafe_allow_html=True)  # Adjust as needed
 
     # Display the altimetrik logo at the bottom of the sidebar
     img_path = "imgs/altimetrik.png"

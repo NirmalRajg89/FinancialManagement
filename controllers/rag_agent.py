@@ -44,7 +44,7 @@ def classify_query(query):
 def route_query(query):
     agent_type = classify_query(query)
     if agent_type == "stock":
-        agent_executor = create_agent_executor()
+        agent_executor = create_agent_executor(query)
         return agent_executor.invoke({"input": query})["output"]
     elif agent_type == "ratecom":
         return answer_ratecom_question(query)
