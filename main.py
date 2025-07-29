@@ -7,6 +7,8 @@ import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from streamlit_option_menu import option_menu
 from controllers.router_graph import app
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain.chat_models import ChatOpenAI
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -16,6 +18,20 @@ def img_to_base64(image_path):
     except Exception as e:
         print(f"Error converting image to base64: {str(e)}")
         return None
+
+# Initialize the memory in session state
+def get_session_memory():
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationSummaryBufferMemory(
+            memory_key="chat_history",
+            return_messages=True,
+            input_key="question",
+            max_token_limit=1000,
+            llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo")
+        )
+    return st.session_state.memory
+
+
 def main():
     st.set_page_config(layout="wide")
     st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰")
@@ -88,10 +104,12 @@ def main():
 
     if mode == "Financial Advisor":
         st.title("💼 Financial Advisor")
+
+        # Initialize chat history
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
 
-            # Now it's safe to display chat history
+        # Display chat history
         for message in st.session_state.chat_history:
             role = "assistant" if isinstance(message, AIMessage) else "user"
             with st.chat_message(role):
@@ -100,6 +118,7 @@ def main():
         user_query = st.chat_input("Your message")
 
         if user_query:
+            # Add user message to chat history
             human_msg = HumanMessage(content=user_query)
             st.session_state.chat_history.append(human_msg)
 
@@ -108,24 +127,33 @@ def main():
 
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice......"):
-                    # output = route_query(user_query)
-                    response = app.invoke({"question": user_query})
-                    print(response)
+                    # Get the session memory
+                    memory = get_session_memory()
+
+                    # Invoke the router graph with the current memory
+                    response = app.invoke({
+                        "question": user_query,
+                        "routes": [],
+                        "current_route": None,
+                        "answer": "",
+                        "intermediate": {},
+                        "memory": memory,
+                        "session_id": "streamlit_session"  # Can use st.session_state.id if needed
+                    })
+
                     output = response.get("answer", "Sorry, something went wrong.")
 
-                # if isinstance(output, dict) and "output" in output:
-                #     output = output["output"]
-
+                # Add AI response to chat history
                 ai_msg = AIMessage(content=output)
                 st.session_state.chat_history.append(ai_msg)
 
+                # Stream the response
                 output_placeholder = st.empty()
                 full_response = ""
                 for char in output:
                     full_response += char
                     output_placeholder.markdown(full_response + "▌")
                     time.sleep(0.01)
-
                 output_placeholder.markdown(full_response)
 
     elif mode == "Fitness Wellness":
