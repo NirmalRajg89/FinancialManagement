@@ -5,7 +5,7 @@ import requests
 
 API_KEY = 'a9d2d7605e0b4f96b4f06e3ac61cf3b7'
 BASE_URL = 'https://newsapi.org/v2/everything'
-@st.cache_data(ttl=50)
+@st.cache_data(ttl=5)
 def get_stock_news():
     params = {
         'q': 'stocks OR finance OR market',
