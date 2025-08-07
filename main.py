@@ -1,5 +1,11 @@
 import base64
+import json
+import os
+
+import pandas as pd
 import streamlit as st
+
+from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
 from controllers.newsAPI_controller import get_stock_news
 # from controllers.router_agent import route_query
 from langchain.schema import AIMessage, HumanMessage
@@ -7,8 +13,6 @@ import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from streamlit_option_menu import option_menu
 from controllers.router_graph import app
-from langchain.memory import ConversationSummaryBufferMemory
-from langchain.chat_models import ChatOpenAI
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -76,8 +80,8 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Fitness Wellness"],
-            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill"],
+            options=["Stock News", "Financial Advisor", "Fitness Wellness","Tracker"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill","graph-up-arrow"],
             menu_icon="cast",
             default_index=0,
             # orientation = "horizontal",
@@ -104,12 +108,10 @@ def main():
 
     if mode == "Financial Advisor":
         st.title("💼 Financial Advisor")
-
-        # Initialize chat history
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
 
-        # Display chat history
+            # Now it's safe to display chat history
         for message in st.session_state.chat_history:
             role = "assistant" if isinstance(message, AIMessage) else "user"
             with st.chat_message(role):
@@ -118,7 +120,6 @@ def main():
         user_query = st.chat_input("Your message")
 
         if user_query:
-            # Add user message to chat history
             human_msg = HumanMessage(content=user_query)
             st.session_state.chat_history.append(human_msg)
 
@@ -127,33 +128,24 @@ def main():
 
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice......"):
-                    # Get the session memory
-                    memory = get_session_memory()
-
-                    # Invoke the router graph with the current memory
-                    response = app.invoke({
-                        "question": user_query,
-                        "routes": [],
-                        "current_route": None,
-                        "answer": "",
-                        "intermediate": {},
-                        "memory": memory,
-                        "session_id": "streamlit_session"  # Can use st.session_state.id if needed
-                    })
-
+                    # output = route_query(user_query)
+                    response = app.invoke({"question": user_query})
+                    print(response)
                     output = response.get("answer", "Sorry, something went wrong.")
 
-                # Add AI response to chat history
+                # if isinstance(output, dict) and "output" in output:
+                #     output = output["output"]
+
                 ai_msg = AIMessage(content=output)
                 st.session_state.chat_history.append(ai_msg)
 
-                # Stream the response
                 output_placeholder = st.empty()
                 full_response = ""
                 for char in output:
                     full_response += char
                     output_placeholder.markdown(full_response + "▌")
                     time.sleep(0.01)
+
                 output_placeholder.markdown(full_response)
 
     elif mode == "Fitness Wellness":
@@ -190,6 +182,44 @@ def main():
                         st.video(link)
             output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
+    elif mode == "Tracker":
+        st.title("📊 Financial Tracker Agent")
+        st.write("AI-powered customer financial summary using LangChain + OpenAI")
+
+        data = load_customer_data()
+        if not data:
+            st.error("❌ Customer data file not found.")
+            return
+
+        name = st.text_input("🔍 Enter customer name (e.g., Amanda,Brad,Chris,David):")
+
+        if name:
+            result, error = get_user_summary_data(name, data)
+
+            if error:
+                st.warning(f"⚠️ {error}")
+            else:
+                # Display user query
+                st.markdown(f"## 📄 Summary for **{name}**")
+
+                # Display financial summary
+                st.markdown(f"""
+                   **💳 Credit Score:** `{result['credit_score']}`  
+                   **💰 Monthly Income:** `${result['monthly_income']:,.2f}`  
+                   **🏦 Total Assets:** `${result['total_assets']:,.2f}`  
+                   **📉 Total Liabilities:** `${result['total_liabilities']:,.2f}`
+                   """)
+
+                # Optional AI summary
+                #if st.button("✨ Generate AI Summary"):
+                ai_summary = generate_financial_summary_langchain(
+                    result["name"],
+                    result["credit_score"],
+                    result["total_assets"],
+                    result["total_liabilities"]
+                )
+                st.markdown("### 🤖 AI Summary")
+                st.markdown(f"> {ai_summary}")
 
     else:
         # Handle initial state

@@ -15,7 +15,7 @@ from models.tools import (
     get_balance_sheet,
     get_income_statement,
     get_cash_flow,
-    get_news,
+    get_news, get_historical_data, get_latest_news,
 )
 import streamlit as st
 
@@ -38,7 +38,8 @@ def create_agent_executor(question, memory=None):
         get_balance_sheet,
         get_income_statement,
         get_cash_flow,
-        get_news,
+        get_latest_news,
+        get_historical_data,
     ]
 
     # Initialize memory with consistent input/output keys
