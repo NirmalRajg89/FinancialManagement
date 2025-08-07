@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
+from controllers.flow import build_agent
 from controllers.newsAPI_controller import get_stock_news
 # from controllers.router_agent import route_query
 from langchain.schema import AIMessage, HumanMessage
@@ -80,8 +81,8 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Fitness Wellness","Tracker"],
-            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill","graph-up-arrow"],
+            options=["Stock News", "Financial Advisor", "Fitness Wellness","Tracker","Goal based"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill","graph-up-arrow","clipboard-data"],
             menu_icon="cast",
             default_index=0,
             # orientation = "horizontal",
@@ -220,7 +221,43 @@ def main():
                 )
                 st.markdown("### 🤖 AI Summary")
                 st.markdown(f"> {ai_summary}")
+    elif mode == "Goal based":
+        with open("data/customer.json") as f:
+            data = json.load(f)
+        amanda_data = data["Amanda"]
+        st.set_page_config(page_title="Investment Planner")
+        st.title("📊 Personalized Investment Planning for Amanda")
 
+        # --- Collect Dynamic Inputs from User ---
+        st.subheader("Enter Your Investment Preferences")
+
+        goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building"]
+        goals = st.multiselect("Financial Goals", goal_options, default=["Retirement"])
+
+        risk_level = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=1)
+
+        monthly_contribution = st.slider("How much can you invest monthly?", min_value=100, max_value=5000, step=100,
+                                         value=1000)
+
+        # On submit
+        if st.button("Generate Investment Plan"):
+            st.info("Generating personalized investment plan...")
+
+            # Merge Amanda's data + user inputs
+            input_data = {
+                "profile": amanda_data,
+                "user_inputs": {
+                    "goals": goals,
+                    "risk_tolerance": risk_level.lower(),
+                    "monthly_contribution": monthly_contribution
+                }
+            }
+
+            agent = build_agent()
+            result = agent.invoke(input_data)
+
+            st.subheader("🧠 Your Investment Plan")
+            st.markdown(result.content)
     else:
         # Handle initial state
         if "refresh_news" not in st.session_state:
