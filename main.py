@@ -1,14 +1,13 @@
 import base64
 import json
-import os
 
-import pandas as pd
 import streamlit as st
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain_openai import ChatOpenAI
 
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
 from controllers.flow import build_agent
 from controllers.newsAPI_controller import get_stock_news
-# from controllers.router_agent import route_query
 from langchain.schema import AIMessage, HumanMessage
 import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
@@ -42,7 +41,7 @@ def main():
     st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰")
     # Always initialize chat_history if not present
 
-        # Insert custom CSS for glowing effect
+    # Insert custom CSS for glowing effect
     st.markdown(
         """
         <style>
@@ -81,13 +80,12 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Fitness Wellness","Tracker","Goal based"],
-            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill","graph-up-arrow","clipboard-data"],
+            options=["Stock News", "Financial Advisor", "Fitness Wellness", "Tracker", "Goal based"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill", "graph-up-arrow", "clipboard-data"],
             menu_icon="cast",
             default_index=0,
             # orientation = "horizontal",
         )
-
 
     # Sidebar for Mode Selection
     #mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
@@ -222,42 +220,57 @@ def main():
                 st.markdown("### 🤖 AI Summary")
                 st.markdown(f"> {ai_summary}")
     elif mode == "Goal based":
+
+        # Load all user data from file
         with open("data/customer.json") as f:
-            data = json.load(f)
-        amanda_data = data["Amanda"]
+            all_user_data = json.load(f)
+
         st.set_page_config(page_title="Investment Planner")
-        st.title("📊 Personalized Investment Planning for Amanda")
+        st.title("📊 Personalized Investment Planning")
 
-        # --- Collect Dynamic Inputs from User ---
-        st.subheader("Enter Your Investment Preferences")
+        # --- Step 1: Enter User Name ---
+        user_name = st.text_input("Enter your name", value="Amanda")
 
-        goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building"]
-        goals = st.multiselect("Financial Goals", goal_options, default=["Retirement"])
+        if user_name:
+            if user_name not in all_user_data:
+                st.warning(f"No data found for user: {user_name}")
+                st.stop()
 
-        risk_level = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=1)
+            # Step 2: Load user data dynamically
+            user_profile = all_user_data[user_name]
 
-        monthly_contribution = st.slider("How much can you invest monthly?", min_value=100, max_value=5000, step=100,
-                                         value=1000)
+            # --- Step 3: Collect Dynamic Inputs from User ---
+            st.subheader(f"Welcome {user_name}! Enter Your Investment Preferences")
 
-        # On submit
-        if st.button("Generate Investment Plan"):
-            st.info("Generating personalized investment plan...")
+            goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building"]
+            goals = st.multiselect("Financial Goals", goal_options, default=["Retirement"])
 
-            # Merge Amanda's data + user inputs
-            input_data = {
-                "profile": amanda_data,
-                "user_inputs": {
-                    "goals": goals,
-                    "risk_tolerance": risk_level.lower(),
-                    "monthly_contribution": monthly_contribution
+            risk_level = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=1)
+
+            monthly_contribution = st.slider("How much can you invest monthly?", min_value=100, max_value=5000,
+                                             step=100, value=1000)
+
+            # --- Step 4: Generate Plan ---
+            if st.button("Generate Investment Plan"):
+                st.info("Generating personalized investment plan...")
+
+                # Merge user data with inputs
+                input_data = {
+                    "profile": user_profile,
+                    "user_inputs": {
+                        "goals": goals,
+                        "risk_tolerance": risk_level.lower(),
+                        "monthly_contribution": monthly_contribution
+                    }
                 }
-            }
 
-            agent = build_agent()
-            result = agent.invoke(input_data)
+                agent = build_agent()
+                result = agent.invoke(input_data)
 
-            st.subheader("🧠 Your Investment Plan")
-            st.markdown(result.content)
+                # --- Step 5: Show Output ---
+                st.subheader("🧠 Your Investment Plan")
+                st.markdown(result.content)
+
     else:
         # Handle initial state
         if "refresh_news" not in st.session_state:

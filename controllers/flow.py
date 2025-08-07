@@ -18,6 +18,10 @@ Client Profile:
 - Risk Tolerance: ${risk_tolerance}
 - Financial Goals: ${goals}
 
+Highlights:
+Provide basic inputs on Client financial status.
+we need to advise the stocks bases in Client financial data
+
 Instructions:
 1. Suggest a tailored investment strategy (based on goals + risk)
 2. Recommend asset allocation: (% in stocks, bonds, real estate, cash)
