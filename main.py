@@ -1,5 +1,7 @@
 import base64
 import json
+from io import StringIO
+
 import pandas as pd
 import streamlit as st
 from langchain.memory import ConversationSummaryBufferMemory
@@ -80,10 +82,10 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Fitness Wellness", "Tracker", "Goal based"],
-            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill", "graph-up-arrow", "clipboard-data"],
+            options=["Stock News", "Financial Advisor", "Fitness Wellness", "Goal based"],
+            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill", "graph-up-arrow"],
             menu_icon="cast",
-            default_index=4,
+            default_index=3,
         )
 
     st.sidebar.markdown("---")
@@ -175,41 +177,7 @@ def main():
             output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
 
-    elif mode == "Tracker":
-        st.title("📊 Financial Tracker Agent")
-        st.write("AI-powered customer financial summary using LangChain + OpenAI")
-
-        data = load_customer_data()
-        if not data:
-            st.error("❌ Customer data file not found.")
-            return
-
-        name = st.text_input("🔍 Enter customer name (e.g., Amanda,Brad,Chris,David):")
-
-        if name:
-            result, error = get_user_summary_data(name, data)
-
-            if error:
-                st.warning(f"⚠️ {error}")
-            else:
-                st.markdown(f"## 📄 Summary for **{name}**")
-                st.markdown(f"""
-                   **💳 Credit Score:** `{result['credit_score']}`  
-                   **💰 Monthly Income:** `${result['monthly_income']:,.2f}`  
-                   **🏦 Total Assets:** `${result['total_assets']:,.2f}`  
-                   **📉 Total Liabilities:** `${result['total_liabilities']:,.2f}`
-                   """)
-
-                ai_summary = generate_financial_summary_langchain(
-                    result["name"],
-                    result["credit_score"],
-                    result["total_assets"],
-                    result["total_liabilities"]
-                )
-                st.markdown("### 🤖 AI Summary")
-                st.markdown(f"> {ai_summary}")
-
-    elif mode == "Goal based":
+    if mode == "Goal based":
 
         # Load user data
         with open("data/customer.json") as f:
@@ -233,12 +201,13 @@ def main():
             employment = user_profile["employment"]
             assets = user_profile["assets"]
             liabilities = user_profile["liabilities"]
+            total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
 
             summary_data = {
                 "Monthly Income": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
                 "Total Assets": [sum(a["total"] for a in assets)],
-                "Total Liabilities": [sum(l["unpaidBalanceAmount"] for l in liabilities)],
+                "Total Liabilities": total_liabilities,
                 "Debt-to-Income Ratio": [round(
                     sum(l["monthlyPaymentAmount"] for l in liabilities) / employment["monthlyIncomeAmount"], 2
                 )]
@@ -252,23 +221,29 @@ def main():
             with col1:
                 goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building",
                                 "Emergency Fund", "Risk Tolerance"]
-                goals = st.multiselect("Select your goals", goal_options)
+                goals = st.selectbox("Select your goals", goal_options)
 
             with col2:
-                tenure = st.selectbox("Select risk tolerance", ["1 year", "3 year", "5 year", "7 year", "9 year", "10 year", "15 year" ])
+                tenure = st.selectbox("Tenure",
+                                      ["1 year", "3 year", "5 year", "7 year", "9 year", "10 year", "15 year"])
 
             with col3:
                 risk_level = st.selectbox("Select risk tolerance", ["Low", "Moderate", "High"])
 
             with col4:
-                default_contribution = round(employment["monthlyIncomeAmount"] * 0.6, 2)
+                default_contribution = round((employment["monthlyIncomeAmount"] - total_liabilities) * 0.6, 2)
                 monthly_contribution = st.number_input(
-                    "Monthly Contribution",
+                    "Monthly Contribution (50% income - liabilities)",
                     min_value=100.0,
                     max_value=float(employment["monthlyIncomeAmount"]),
                     value=default_contribution,
                     step=100.0
                 )
+
+            # Ensure chat history exists
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
+
             # Step 4: Generate Plan
             if goals and risk_level and monthly_contribution:
                 if st.button("Generate Investment Plan"):
@@ -286,60 +261,63 @@ def main():
                         # Create agent
                         st.session_state.agent = create_agent_executor()
 
-                        # Ask the agent for the investment plan
                         plan_prompt = {
                             "profile": user_profile,
                             "user_inputs": st.session_state.investment_input_data["user_inputs"],
                             "task": "Generate a detailed investment plan based on the above."
                         }
 
-                        # Animated streaming effect
-                        output_placeholder = st.empty()
-                        full_response = ""
-                        response = st.session_state.agent.ask(plan_prompt)
-                        for char in response:
-                            full_response += char
-                            output_placeholder.markdown(full_response + "▌")
-                            time.sleep(0.01)
+                        user_msg = f"Generate plan — goals: {goals}, risk: {risk_level}, tenure: {tenure}, contribution: {monthly_contribution}"
+                        st.session_state.chat_history.append({"role": "user", "content": user_msg})
 
-                        # Store final response for later chat context
-                        st.session_state.generated_plan = full_response
-                        st.session_state.chat_history = []
 
-            # Step 5: Show plan + chat
-            if "generated_plan" in st.session_state:
-                st.subheader("💬 Ask Follow-up Financial Questions")
-                if "chat_history" not in st.session_state:
-                    st.session_state.chat_history = []
+                        with st.chat_message("assistant"):
+                            full_response = ""
+                            response = st.session_state.agent.ask(plan_prompt)
 
-                # Display chat history
+                            response_placeholder = st.empty()
+                            for char in response:
+                                full_response += char
+                                response_placeholder.markdown(full_response + "▌")
+                                time.sleep(0.01)
+                            #response_placeholder.markdown(full_response)
+
+                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                        time.sleep(0.05)
+                        response_placeholder.empty()
+
+            # Step 5: Show conversation + follow-up chat
+            if st.session_state.chat_history:
+                st.subheader("💬 Investment Summary")
                 for msg in st.session_state.chat_history:
-                    if msg["role"] == "user":
-                        st.markdown(f"**You:** {msg['content']}")
-                    else:
-                        st.markdown(f"**Advisor:** {msg['content']}")
+                    with st.chat_message(msg["role"]):
+                        st.markdown(msg["content"])
 
-                # Chat input
+                # Chat input for follow-ups
                 user_query = st.chat_input("Type your question and press Enter...")
                 if user_query:
+                    st.session_state.chat_history.append({"role": "user", "content": user_query})
+                    with st.chat_message("user"):
+                        st.markdown(user_query)
+
                     follow_up_context = {
                         "profile": user_profile,
                         "user_inputs": st.session_state.investment_input_data["user_inputs"],
                         "question": user_query
                     }
 
-                    with st.spinner("Thinking..."):
-                        output_placeholder = st.empty()
-                        full_response = ""
-                        response = st.session_state.agent.ask(follow_up_context)
-                        for char in response:
-                            full_response += char
-                            output_placeholder.markdown(full_response + "▌")
-                            time.sleep(0.01)
+                    with st.chat_message("assistant"):
+                        with st.spinner("Getting expert advice..."):
+                            full_response = ""
+                            response = st.session_state.agent.ask(follow_up_context)
+                            response_placeholder = st.empty()
+                            for char in response:
+                                full_response += char
+                                response_placeholder.markdown(full_response + "▌")
+                                time.sleep(0.01)
+                            response_placeholder.markdown(full_response)
 
-                        st.session_state.chat_history.append({"role": "user", "content": user_query})
-                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-
+                    st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                     st.rerun()
 
 
@@ -379,6 +357,29 @@ def main():
         else:
             st.write(news_response)
 
+
+def render_message(role, content):
+    """Render chat message with proper table formatting if Markdown table is detected."""
+    if role == "user":
+        st.markdown(f"**You:** {content}")
+        return
+
+    # Advisor message
+    # Split into blocks separated by double newlines
+    blocks = content.split("\n\n")
+    st.markdown("**Advisor:**")
+
+    for block in blocks:
+        block = block.strip()
+        # Detect markdown table
+        if block.startswith("|") and block.count("|") > 2:
+            try:
+                df = pd.read_csv(StringIO(block.replace("|", ",").strip(",")), sep=",")
+                st.table(df)
+            except Exception:
+                st.markdown(block)
+        else:
+            st.markdown(block)
 
 if __name__ == "__main__":
     main()
