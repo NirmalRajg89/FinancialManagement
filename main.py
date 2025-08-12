@@ -1,18 +1,18 @@
 import base64
 import json
-
+import pandas as pd
 import streamlit as st
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
-
+from controllers.agent_controller import create_agent_executor
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
-from controllers.flow import build_agent
 from controllers.newsAPI_controller import get_stock_news
 from langchain.schema import AIMessage, HumanMessage
 import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from streamlit_option_menu import option_menu
 from controllers.router_graph import app
+
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -22,6 +22,7 @@ def img_to_base64(image_path):
     except Exception as e:
         print(f"Error converting image to base64: {str(e)}")
         return None
+
 
 # Initialize the memory in session state
 def get_session_memory():
@@ -39,7 +40,6 @@ def get_session_memory():
 def main():
     st.set_page_config(layout="wide")
     st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰")
-    # Always initialize chat_history if not present
 
     # Insert custom CSS for glowing effect
     st.markdown(
@@ -83,12 +83,8 @@ def main():
             options=["Stock News", "Financial Advisor", "Fitness Wellness", "Tracker", "Goal based"],
             icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill", "graph-up-arrow", "clipboard-data"],
             menu_icon="cast",
-            default_index=0,
-            # orientation = "horizontal",
+            default_index=4,
         )
-
-    # Sidebar for Mode Selection
-    #mode = st.sidebar.radio("Select Mode:", options=["Latest Stock Updates", "Financial Advisor", "Fitness and Wellness"], index=1)
 
     st.sidebar.markdown("---")
 
@@ -107,15 +103,17 @@ def main():
 
     if mode == "Financial Advisor":
         st.title("💼 Financial Advisor")
+
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
 
-            # Now it's safe to display chat history
+        # Display chat history
         for message in st.session_state.chat_history:
             role = "assistant" if isinstance(message, AIMessage) else "user"
             with st.chat_message(role):
                 st.markdown(message.content)
 
+        # Get user input
         user_query = st.chat_input("Your message")
 
         if user_query:
@@ -127,13 +125,9 @@ def main():
 
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice......"):
-                    # output = route_query(user_query)
                     response = app.invoke({"question": user_query})
                     print(response)
                     output = response.get("answer", "Sorry, something went wrong.")
-
-                # if isinstance(output, dict) and "output" in output:
-                #     output = output["output"]
 
                 ai_msg = AIMessage(content=output)
                 st.session_state.chat_history.append(ai_msg)
@@ -170,7 +164,6 @@ def main():
             with st.chat_message("assistant"):
                 with st.spinner("Getting expert advice..."):
                     response = get_wellness_response(user_input)
-                    #st.markdown(response)
                     output_placeholder = st.empty()
                     full_response = ""
                     for char in response:
@@ -181,6 +174,7 @@ def main():
                         st.video(link)
             output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
+
     elif mode == "Tracker":
         st.title("📊 Financial Tracker Agent")
         st.write("AI-powered customer financial summary using LangChain + OpenAI")
@@ -198,10 +192,7 @@ def main():
             if error:
                 st.warning(f"⚠️ {error}")
             else:
-                # Display user query
                 st.markdown(f"## 📄 Summary for **{name}**")
-
-                # Display financial summary
                 st.markdown(f"""
                    **💳 Credit Score:** `{result['credit_score']}`  
                    **💰 Monthly Income:** `${result['monthly_income']:,.2f}`  
@@ -209,8 +200,6 @@ def main():
                    **📉 Total Liabilities:** `${result['total_liabilities']:,.2f}`
                    """)
 
-                # Optional AI summary
-                #if st.button("✨ Generate AI Summary"):
                 ai_summary = generate_financial_summary_langchain(
                     result["name"],
                     result["credit_score"],
@@ -219,66 +208,149 @@ def main():
                 )
                 st.markdown("### 🤖 AI Summary")
                 st.markdown(f"> {ai_summary}")
+
     elif mode == "Goal based":
 
-        # Load all user data from file
+        # Load user data
         with open("data/customer.json") as f:
             all_user_data = json.load(f)
 
-        st.set_page_config(page_title="Investment Planner")
+        st.set_page_config(page_title="Investment Planner", layout="wide")
         st.title("📊 Personalized Investment Planning")
 
-        # --- Step 1: Enter User Name ---
-        user_name = st.text_input("Enter your name", value="Amanda")
+        # Step 1: Ask for name
+        user_name = st.text_input("Enter your name to begin:")
 
         if user_name:
             if user_name not in all_user_data:
-                st.warning(f"No data found for user: {user_name}")
+                st.error(f"No data found for user: {user_name}")
                 st.stop()
 
-            # Step 2: Load user data dynamically
             user_profile = all_user_data[user_name]
 
-            # --- Step 3: Collect Dynamic Inputs from User ---
-            st.subheader(f"Welcome {user_name}! Enter Your Investment Preferences")
+            # Step 2: Financial summary
+            st.subheader(f"💼 {user_name}'s Financial Summary")
+            employment = user_profile["employment"]
+            assets = user_profile["assets"]
+            liabilities = user_profile["liabilities"]
 
-            goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building"]
-            goals = st.multiselect("Financial Goals", goal_options, default=["Retirement"])
+            summary_data = {
+                "Monthly Income": [employment["monthlyIncomeAmount"]],
+                "Credit Score": [employment["creditScore"]],
+                "Total Assets": [sum(a["total"] for a in assets)],
+                "Total Liabilities": [sum(l["unpaidBalanceAmount"] for l in liabilities)],
+                "Debt-to-Income Ratio": [round(
+                    sum(l["monthlyPaymentAmount"] for l in liabilities) / employment["monthlyIncomeAmount"], 2
+                )]
+            }
+            st.table(pd.DataFrame(summary_data))
 
-            risk_level = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=1)
+            # Step 3: Preferences
+            st.subheader("🎯 Investment Preferences")
+            col1, col2, col3, col4 = st.columns(4)
 
-            monthly_contribution = st.slider("How much can you invest monthly?", min_value=100, max_value=5000,
-                                             step=100, value=1000)
+            with col1:
+                goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building",
+                                "Emergency Fund", "Risk Tolerance"]
+                goals = st.multiselect("Select your goals", goal_options)
 
-            # --- Step 4: Generate Plan ---
-            if st.button("Generate Investment Plan"):
-                st.info("Generating personalized investment plan...")
+            with col2:
+                tenure = st.selectbox("Select risk tolerance", ["1 year", "3 year", "5 year", "7 year", "9 year", "10 year", "15 year" ])
 
-                # Merge user data with inputs
-                input_data = {
-                    "profile": user_profile,
-                    "user_inputs": {
-                        "goals": goals,
-                        "risk_tolerance": risk_level.lower(),
-                        "monthly_contribution": monthly_contribution
+            with col3:
+                risk_level = st.selectbox("Select risk tolerance", ["Low", "Moderate", "High"])
+
+            with col4:
+                default_contribution = round(employment["monthlyIncomeAmount"] * 0.6, 2)
+                monthly_contribution = st.number_input(
+                    "Monthly Contribution",
+                    min_value=100.0,
+                    max_value=float(employment["monthlyIncomeAmount"]),
+                    value=default_contribution,
+                    step=100.0
+                )
+            # Step 4: Generate Plan
+            if goals and risk_level and monthly_contribution:
+                if st.button("Generate Investment Plan"):
+                    with st.spinner("Getting expert advice..."):
+                        st.session_state.investment_input_data = {
+                            "profile": user_profile,
+                            "user_inputs": {
+                                "goals": goals,
+                                "risk_tolerance": risk_level.lower(),
+                                "tenure": tenure,
+                                "monthly_contribution": monthly_contribution
+                            }
+                        }
+
+                        # Create agent
+                        st.session_state.agent = create_agent_executor()
+
+                        # Ask the agent for the investment plan
+                        plan_prompt = {
+                            "profile": user_profile,
+                            "user_inputs": st.session_state.investment_input_data["user_inputs"],
+                            "task": "Generate a detailed investment plan based on the above."
+                        }
+
+                        # Animated streaming effect
+                        output_placeholder = st.empty()
+                        full_response = ""
+                        response = st.session_state.agent.ask(plan_prompt)
+                        for char in response:
+                            full_response += char
+                            output_placeholder.markdown(full_response + "▌")
+                            time.sleep(0.01)
+
+                        # Store final response for later chat context
+                        st.session_state.generated_plan = full_response
+                        st.session_state.chat_history = []
+
+            # Step 5: Show plan + chat
+            if "generated_plan" in st.session_state:
+                st.subheader("💬 Ask Follow-up Financial Questions")
+                if "chat_history" not in st.session_state:
+                    st.session_state.chat_history = []
+
+                # Display chat history
+                for msg in st.session_state.chat_history:
+                    if msg["role"] == "user":
+                        st.markdown(f"**You:** {msg['content']}")
+                    else:
+                        st.markdown(f"**Advisor:** {msg['content']}")
+
+                # Chat input
+                user_query = st.chat_input("Type your question and press Enter...")
+                if user_query:
+                    follow_up_context = {
+                        "profile": user_profile,
+                        "user_inputs": st.session_state.investment_input_data["user_inputs"],
+                        "question": user_query
                     }
-                }
 
-                agent = build_agent()
-                result = agent.invoke(input_data)
+                    with st.spinner("Thinking..."):
+                        output_placeholder = st.empty()
+                        full_response = ""
+                        response = st.session_state.agent.ask(follow_up_context)
+                        for char in response:
+                            full_response += char
+                            output_placeholder.markdown(full_response + "▌")
+                            time.sleep(0.01)
 
-                # --- Step 5: Show Output ---
-                st.subheader("🧠 Your Investment Plan")
-                st.markdown(result.content)
+                        st.session_state.chat_history.append({"role": "user", "content": user_query})
+                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+
+                    st.rerun()
+
+
 
     else:
-        # Handle initial state
+        # Handle initial state for stock news
         if "refresh_news" not in st.session_state:
             st.session_state.refresh_news = True
         if "news_data" not in st.session_state:
             st.session_state.news_data = []
 
-        # Heading with refresh button on the right
         col1, col2 = st.columns([10, 3])
         with col1:
             st.markdown("## 📰 Latest Stock Updates")
@@ -286,14 +358,12 @@ def main():
             if st.button("## ♻️ Update News", help="Refresh News"):
                 st.session_state.refresh_news = True
 
-        # Fetch news if needed
         if st.session_state.refresh_news:
             with st.spinner("Fetching latest stock news..."):
                 news_response = get_stock_news()
                 st.session_state.news_data = news_response
                 st.session_state.refresh_news = False
 
-        # Display news
         news_response = st.session_state.news_data
         if isinstance(news_response, list):
             for article in news_response:

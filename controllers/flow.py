@@ -75,3 +75,17 @@ def build_agent():
         | investment_plan_prompt
         | llm
     )
+
+chat_prompt = ChatPromptTemplate.from_template("""
+You are a helpful financial advisor.
+The client's profile is:
+{profile}
+
+Answer the question:
+{question}
+
+Your answers must be based ONLY on the profile data provided, not generic advice unless necessary.
+""")
+
+def build_chat_agent():
+    return chat_prompt | llm
