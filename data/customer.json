@@ -1,6 +1,7 @@
 
   {
     "Amanda":{
+      "riskTolerance": "Medium",
     "employment": {
       "altId": "1e4c45a2-d9a2-4f64-91a2-709fefb7a001",
       "sourceOfIncomeData": "Encompass",
@@ -65,6 +66,7 @@
     ]
   },
   "Brad":{
+     "riskTolerance": "High",
     "employment": {
       "altId": "2f0a28e9-23df-4936-939b-9dd84a6c2ac7",
       "sourceOfIncomeData": "Encompass",
@@ -129,6 +131,7 @@
     ]
   },
   "Chris":{
+     "riskTolerance": "low",
     "employment": {
       "altId": "3c8e0d78-0b33-4a9e-bc12-3f534646f9d3",
       "sourceOfIncomeData": "Encompass",
@@ -193,6 +196,7 @@
     ]
   },
   "David":{
+    "riskTolerance": "High",
   "employment": {
     "altId": "4d22fe41-8e41-47ff-9a17-0911f63b5b88",
     "sourceOfIncomeData": "Encompass",

@@ -177,6 +177,7 @@ def main():
             output_placeholder.markdown(full_response)
             st.session_state.chat_history_wellness.append((user_input, response))
 
+    # Dummy function placeholder for your AI agent
     if mode == "Goal based":
 
         # Load user data
@@ -216,74 +217,142 @@ def main():
 
             # Step 3: Preferences
             st.subheader("🎯 Investment Preferences")
-            col1, col2, col3, col4 = st.columns(4)
 
-            with col1:
-                goal_options = ["Retirement", "Buy Home", "Travel", "Education", "Wealth Building",
-                                "Emergency Fund", "Risk Tolerance"]
-                goals = st.selectbox("Select your goals", goal_options)
+            plan_type = st.radio("Select Plan Type", ["Short-term", "Long-term"], horizontal=True)
 
-            with col2:
-                tenure = st.selectbox("Tenure",
-                                      ["1 year", "3 year", "5 year", "7 year", "9 year", "10 year", "15 year"])
+            # Calculate disposable income
+            disposable_income = employment["monthlyIncomeAmount"] - total_liabilities
 
-            with col3:
-                risk_level = st.selectbox("Select risk tolerance", ["Low", "Moderate", "High"])
+            if plan_type == "Short-term":
+                col1, col2, col3, col4 = st.columns(4)
 
-            with col4:
-                default_contribution = round((employment["monthlyIncomeAmount"] - total_liabilities) * 0.6, 2)
-                monthly_contribution = st.number_input(
-                    "Monthly Contribution (50% income - liabilities)",
-                    min_value=100.0,
-                    max_value=float(employment["monthlyIncomeAmount"]),
-                    value=default_contribution,
-                    step=100.0
-                )
+                with col1:
+                    goals = st.selectbox("Goal", ["Investment", "Education", "Car", "Bike"])
+
+                with col2:
+                    tenure = st.selectbox("Duration", ["5 years","6 months", "1 year", "2 years", "3 years"])
+
+                with col3:
+                    default_contribution = round(disposable_income * 0.4, 2)
+                    monthly_contribution = st.number_input(
+                        "Monthly Investment",
+                        min_value=100.0,
+                        max_value=float(employment["monthlyIncomeAmount"]),
+                        value=default_contribution,
+                        step=100.0
+                    )
+
+                with col4:
+                    goal_amount = st.number_input(
+                        "Expected Goal Amount",
+                        min_value=1000.0,
+                        max_value=1_00_00_000.0,
+                        step=1000.0,
+                        value=10_00_000.0
+                    )
+
+            elif plan_type == "Long-term":
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    goals = st.selectbox("Goal", ["Retirement", "Home", "Others"])
+
+                with col2:
+                    current_age = st.number_input("Current Age", min_value=18, max_value=70, value=30, step=1)
+                    expected_age = st.number_input("Expected Age at Goal", min_value=current_age + 1, max_value=100,
+                                                   value=60, step=1)
+                    tenure = f"{expected_age - current_age} years"
+                    st.text_input("Duration", tenure, disabled=True)
+
+                with col3:
+                    default_contribution = round(disposable_income * 0.6, 2)
+                    monthly_contribution = st.number_input(
+                        "Monthly Investment",
+                        min_value=100.0,
+                        max_value=float(employment["monthlyIncomeAmount"]),
+                        value=default_contribution,
+                        step=100.0
+                    )
+
+                with col4:
+                    goal_amount = st.number_input(
+                        "Expected Goal Amount",
+                        min_value=1000.0,
+                        max_value=5_00_00_000.0,
+                        step=10000.0,
+                        value=2000000.0
+                    )
+
+            # Risk level (non-editable, auto from profile)
+            risk_level = user_profile.get("riskTolerance", "Moderate")
+            st.info(f"📌 Risk Level (based on profile): **{risk_level}**")
 
             # Ensure chat history exists
             if "chat_history" not in st.session_state:
                 st.session_state.chat_history = []
 
+            investment_options = """
+            - Bank Savings Account (3–4%)
+            - Recurring Deposit (5–7%)
+            - Public Provident Fund (7–8%)
+            - Equity Mutual Funds (8–12%)
+            - Index Funds (10–15%)
+            - Stock Market (15–20%)
+            """
+
             # Step 4: Generate Plan
-            if goals and risk_level and monthly_contribution:
+            if goals and monthly_contribution:
                 if st.button("Generate Investment Plan"):
                     with st.spinner("Getting expert advice..."):
                         st.session_state.investment_input_data = {
                             "profile": user_profile,
+                            "investment_options": investment_options,
                             "user_inputs": {
+                                "plan_type": plan_type,
                                 "goals": goals,
                                 "risk_tolerance": risk_level.lower(),
                                 "tenure": tenure,
-                                "monthly_contribution": monthly_contribution
+                                "monthly_contribution": monthly_contribution,
+                                "goal_amount": goal_amount
+
                             }
+                        }
+                        static_vars = {
+                            "monthly_contribution": str(monthly_contribution),
+                            "tenure": str(tenure),
+                            "goal_amount": str(goal_amount),
+                            "risk_tolerance": str(risk_level),
+                            "investment_options": investment_options,
                         }
 
                         # Create agent
-                        st.session_state.agent = create_agent_executor()
+                        st.session_state.agent = create_agent_executor(static_vars)
 
                         plan_prompt = {
                             "profile": user_profile,
                             "user_inputs": st.session_state.investment_input_data["user_inputs"],
-                            "task": "Generate a detailed investment plan based on the above."
+                            "tenure": tenure,
+                            "monthly_contribution": monthly_contribution,
+                            "goal_amount": goal_amount,
+                            "risk_tolerance": risk_level,
+                            "investment_options": investment_options,
+                            "question": "Generate a detailed investment plan based on the above."
                         }
 
-                        user_msg = f"Generate plan — goals: {goals}, risk: {risk_level}, tenure: {tenure}, contribution: {monthly_contribution}"
+                        user_msg = f"Generate {plan_type} plan — goals: {goals}, risk: {risk_level}, tenure: {tenure}, contribution: {monthly_contribution}, Goal to achieve: {goal_amount}"
                         st.session_state.chat_history.append({"role": "user", "content": user_msg})
 
+                        full_response = ""
+                        response = st.session_state.agent.ask(plan_prompt)
 
-                        with st.chat_message("assistant"):
-                            full_response = ""
-                            response = st.session_state.agent.ask(plan_prompt)
-
-                            response_placeholder = st.empty()
-                            for char in response:
-                                full_response += char
-                                response_placeholder.markdown(full_response + "▌")
-                                time.sleep(0.01)
-                            #response_placeholder.markdown(full_response)
+                        response_placeholder = st.empty()
+                        for char in response:
+                            full_response += char
+                            response_placeholder.markdown(full_response + "▌")
+                            time.sleep(0.001)
 
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-                        time.sleep(0.05)
+                        time.sleep(0.02)
                         response_placeholder.empty()
 
             # Step 5: Show conversation + follow-up chat
@@ -300,11 +369,7 @@ def main():
                     with st.chat_message("user"):
                         st.markdown(user_query)
 
-                    follow_up_context = {
-                        "profile": user_profile,
-                        "user_inputs": st.session_state.investment_input_data["user_inputs"],
-                        "question": user_query
-                    }
+                    follow_up_context = {"question": user_query}
 
                     with st.chat_message("assistant"):
                         with st.spinner("Getting expert advice..."):
@@ -357,29 +422,6 @@ def main():
         else:
             st.write(news_response)
 
-
-def render_message(role, content):
-    """Render chat message with proper table formatting if Markdown table is detected."""
-    if role == "user":
-        st.markdown(f"**You:** {content}")
-        return
-
-    # Advisor message
-    # Split into blocks separated by double newlines
-    blocks = content.split("\n\n")
-    st.markdown("**Advisor:**")
-
-    for block in blocks:
-        block = block.strip()
-        # Detect markdown table
-        if block.startswith("|") and block.count("|") > 2:
-            try:
-                df = pd.read_csv(StringIO(block.replace("|", ",").strip(",")), sep=",")
-                st.table(df)
-            except Exception:
-                st.markdown(block)
-        else:
-            st.markdown(block)
 
 if __name__ == "__main__":
     main()

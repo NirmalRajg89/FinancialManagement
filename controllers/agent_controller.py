@@ -40,8 +40,7 @@ class InvestmentAgent:
         result = self.executor.invoke({"question": question})
         return result["output"] if "output" in result else result
 
-
-def create_agent_executor():
+def create_agent_executor(static_vars: dict):
     load_env()
 
     llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
@@ -60,51 +59,103 @@ def create_agent_executor():
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True,
-        input_key="question",
+        input_key="question",   # we are using {question} in the prompt
         output_key="output",
     )
 
-    prompt = ChatPromptTemplate.from_messages([
+    base_prompt = ChatPromptTemplate.from_messages([
         ("system",
          """You are a financial assistant.
-    Given the user profile and investment inputs, calculate the **final projected values** for the entire tenure.
+Given the user profile, investment inputs, and target goal, calculate the final projected values for the entire tenure and check if the target goal can be achieved.
 
-    Rules:
-    - Perform all calculations internally. **Never** explain formulas or steps.
-    - Output only the **final numeric results** in tables.
-    - Do not show any text outside the tables except the risk details at the end.
-    - Do not show percentages with '%' signs — use numeric values only.
-    - Do not show currency symbols — only numbers.
+-----
+### RULES
+- Perform all calculations internally. Never explain formulas or steps.
+- Output must be in Markdown tables only.
+- Always format numbers in Indian numbering style with commas.
+- Prefix all monetary values with ₹.
+- Always show percentages with the % symbol.
+- In Suggestions column, show each recommendation on a new line using line breaks (- item 1<br>- item 2).
+- Never leave numbers in raw form.
 
-    Output format:
+-------
+### OUTPUT SECTIONS
+### 1. Investment Options Analysis
+- Use the given monthly contribution (₹{monthly_contribution}) and tenure ({tenure} years) to calculate the future value under each return range.
+- For each investment option, show:
+  * Expected Return (%)
+  * Future Value at {tenure} Years (₹)
+  * Achieved Target? (Yes/No/Maybe, based on comparison with ₹{goal_amount})
+  * Suggestions if Target is Not Met (use <br> for line breaks)
+- **Important:** If the goal is achieved in any investment option, stop the table there and do not display the remaining options.
 
-    1. **Scenarios Table** — Best, Average, Worst case projections for the full tenure:
-    | Scenario     | Expected Final Amount | Total Contribution | Total Profit | Expected Return % |
-    |--------------|----------------------|--------------------|--------------|-------------------|
-    | Best Case    | 1000000              | 600000             | 400000       | 15.2              |
-    | Average Case | 950000               | 600000             | 350000       | 8.5               |
-    | Worst Case   | 900000               | 600000             | 300000       | 3.5               |
+The investment options to consider are:
+{investment_options}
 
-    2. **Investment Plan Table**:
-    | Asset Type | Allocation % | Expected Return % |
-    |------------|--------------|-------------------|
-    | Stocks     | 70           | 12                |
-    | Bonds      | 20           | 5                 |
-    | Cash       | 10           | 2                 |
+Table format:
+| Investment Option | Expected Return (%) | Future Value at {tenure} Years (₹) | Achieved Target? | Suggestions if Target is Not Met |
+|-------------------|---------------------|-------------------------------------|------------------|----------------------------------|
+| <option>          | <range>             | <value>                             | Yes/No/Maybe     | <suggestions> |
 
-    3. **Risk Details**:
-    **Risk Level:** <string>  
-    **Risk Notes:** <string>
+---
+### 2. To Reach ₹{goal_amount} in {tenure} Years
+Show **two scenarios**:
 
-    Important:
-    - All values are for the full tenure, factoring in monthly contributions & compounding.
-    - Do not output formulas, steps, or calculations — only the final results in the above format.
-    - If tenure is more than 1 year, use the full number of months in the calculation.
-    """),
+1. **Required for {tenure} Years Goal**  
+   - Calculate the required monthly contribution to reach the goal in the given tenure.  
+   - Show a single row for this case.  
+
+2. **With Provided Contribution (₹{monthly_contribution})**  
+   - For each investment option from {investment_options}, calculate how many years it would take to achieve ₹{goal_amount} with the provided contribution.  
+   - Do not restrict to {tenure} years. Instead, find the  duration (more than {tenure}) at which the future value meets or exceeds the goal.  
+   - If the goal cannot be achieved even in 30 years, then mark as "Not achievable".  
+
+Format both scenarios into tables.
+
+**Scenario 1: Required for {tenure} Years Goal**
+
+| Monthly Contribution (₹) | Estimated Value (₹) | Duration (Years) | Return Assumption | Action Needed |
+|---------------------------|---------------------|------------------|-------------------|---------------|
+| <calculated amount>       | <future value>      | {tenure}         | <return rate>     | <suggestions> |
+
+---
+
+**Scenario 2: With Provided Contribution (₹{monthly_contribution})**
+- **Important:** If the goal is achieved in any investment option, stop the table there and do not display the remaining options.
+
+| Investment Option | Return Assumption | Duration to Reach Goal (Years) | Estimated Value at Goal (₹) | Action Needed |
+|-------------------|-------------------|--------------------------------|-----------------------------|---------------|
+| <option 1>        | <range>           | <calculated years or "–">      | <goal or value>             | <suggestions> |
+| <option 2>        | <range>           | <calculated years or "–">      | <goal or value>             | <suggestions> |
+... continue for all {investment_options}
+
+---
+
+### 3. Risk Details
+**Risk Level:** {risk_tolerance}
+**Risk Notes:** Tailored recommendations based on user’s risk profile.
+
+Show the suggested percentage split and example stocks aligned with the user's risk profile.
+---
+### 4. By Market Capitalization:
+Based on the user's contribution and risk tolerance, suggest allocation among:
+- Large-cap (e.g., Apple, Microsoft)
+- Mid-cap
+- Small-cap
+
+Important:
+- All values are for the full tenure, factoring in monthly contributions & compounding.
+- Never show formulas, only the results.
+- Always include the Goal Feasibility section.
+- Alternate suggestions must be realistic (aligned with risk tolerance).
+"""),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
         ("human", "{question}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
+
+    # 🔒 Bind your dynamic values here so the agent doesn't expect them later
+    prompt = base_prompt.partial(**static_vars)
 
     agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
 
