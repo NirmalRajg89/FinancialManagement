@@ -6,8 +6,9 @@ import pandas as pd
 import streamlit as st
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
-from controllers.agent_controller import create_agent_executor
+from controllers.agent_controller import create_agent_executor, create_investment_summary
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
+from controllers.flow import get_dynamic_allocation, format_allocation_table
 from controllers.newsAPI_controller import get_stock_news
 from langchain.schema import AIMessage, HumanMessage
 import time
@@ -205,13 +206,10 @@ def main():
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
 
             summary_data = {
-                "Monthly Income": [employment["monthlyIncomeAmount"]],
+                "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
-                "Total Assets": [sum(a["total"] for a in assets)],
-                "Total Liabilities": total_liabilities,
-                "Debt-to-Income Ratio": [round(
-                    sum(l["monthlyPaymentAmount"] for l in liabilities) / employment["monthlyIncomeAmount"], 2
-                )]
+                "Total Assets ($)": [sum(a["total"] for a in assets)],
+                "Total Liabilities ($)": total_liabilities,
             }
             st.table(pd.DataFrame(summary_data))
 
@@ -235,7 +233,7 @@ def main():
                 with col3:
                     default_contribution = round(disposable_income * 0.4, 2)
                     monthly_contribution = st.number_input(
-                        "Monthly Investment",
+                        "Monthly Investment - 60% (Income - Expense)",
                         min_value=100.0,
                         max_value=float(employment["monthlyIncomeAmount"]),
                         value=default_contribution,
@@ -267,7 +265,7 @@ def main():
                 with col3:
                     default_contribution = round(disposable_income * 0.6, 2)
                     monthly_contribution = st.number_input(
-                        "Monthly Investment",
+                        "Investment(60% Salary - Liabilities)",
                         min_value=100.0,
                         max_value=float(employment["monthlyIncomeAmount"]),
                         value=default_contribution,
@@ -283,9 +281,46 @@ def main():
                         value=2000000.0
                     )
 
-            # Risk level (non-editable, auto from profile)
             risk_level = user_profile.get("riskTolerance", "Moderate")
-            st.info(f"📌 Risk Level (based on profile): **{risk_level}**")
+
+            # Map risk tolerance to color and meaning
+            risk_info = {
+                "Low": {
+                    "color": "#e74c3c",  # Green
+                    "meaning": "Prefers safety, avoids loss, low risk acceptance"
+                },
+                "Moderate": {
+                    "color": "#f1c40f",  # Yellow
+                    "meaning": "Balanced approach, some risk acceptable"
+                },
+                "High": {
+                    "color": "#2ecc71",  # Red
+                    "meaning": "Comfortable with big ups and downs, seeks high returns"
+                }
+            }
+
+            # Default if unknown risk level
+            info = risk_info.get(risk_level, {
+                "color": "#95a5a6",
+                "meaning": "Risk tolerance data not available"
+            })
+
+            st.markdown(
+                f"""
+                <div style="
+                    background-color: {info['color']};
+                    padding: 15px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    font-size: 1.1em;
+                    color: white;
+                    line-height: 1.4;">
+                    📌 Risk Tolerance Level (based on profile): <strong>{risk_level} - ({info['meaning']})</strong><br>
+                </div>
+                </br>
+                """,
+                unsafe_allow_html=True
+            )
 
             # Ensure chat history exists
             if "chat_history" not in st.session_state:
@@ -299,6 +334,17 @@ def main():
             - Index Funds (10–15%)
             - Stock Market (15–20%)
             """
+            allocation = get_dynamic_allocation(risk_level, monthly_contribution)
+            formatted_table = format_allocation_table(allocation, monthly_contribution)
+
+            static_vars = {
+                "monthly_contribution": str(monthly_contribution),
+                "tenure": str(tenure),
+                "goal_amount": str(goal_amount),
+                "risk_tolerance": str(risk_level),
+                "investment_options": investment_options,
+                "formatted_allocation_table": formatted_table,
+            }
 
             # Step 4: Generate Plan
             if goals and monthly_contribution:
@@ -317,16 +363,8 @@ def main():
 
                             }
                         }
-                        static_vars = {
-                            "monthly_contribution": str(monthly_contribution),
-                            "tenure": str(tenure),
-                            "goal_amount": str(goal_amount),
-                            "risk_tolerance": str(risk_level),
-                            "investment_options": investment_options,
-                        }
-
                         # Create agent
-                        st.session_state.agent = create_agent_executor(static_vars)
+                        st.session_state.agent = create_investment_summary(static_vars)
 
                         plan_prompt = {
                             "profile": user_profile,
@@ -370,7 +408,7 @@ def main():
                         st.markdown(user_query)
 
                     follow_up_context = {"question": user_query}
-
+                    st.session_state.agent = create_agent_executor(static_vars)
                     with st.chat_message("assistant"):
                         with st.spinner("Getting expert advice..."):
                             full_response = ""
@@ -384,9 +422,6 @@ def main():
 
                     st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                     st.rerun()
-
-
-
     else:
         # Handle initial state for stock news
         if "refresh_news" not in st.session_state:

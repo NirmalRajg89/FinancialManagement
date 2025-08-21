@@ -1,7 +1,7 @@
 
   {
     "Amanda":{
-      "riskTolerance": "Medium",
+      "riskTolerance": "Moderate",
     "employment": {
       "altId": "1e4c45a2-d9a2-4f64-91a2-709fefb7a001",
       "sourceOfIncomeData": "Encompass",
@@ -18,7 +18,7 @@
       "positionDescription": "Software Engineer",
       "basePayAmount": 8333.33,
       "unitType": "Office",
-      "monthlyIncomeAmount": 8333.33,
+      "monthlyIncomeAmount": 8333,
       "owner": "Borrower",
       "titlePhone": "555-123-4567",
       "creditScore": 745
@@ -57,7 +57,7 @@
         "nameInAccount": "John Smith",
         "includeTaxesAndInsuranceIndicator": false,
         "requestId": "a7b1c1d1-1111-4f33-9aaa-1c2c2e2e2e2e",
-        "unpaidBalanceAmount": 800,
+        "unpaidBalanceAmount": 1800,
         "id": "Liability/8",
         "liabilityType": "Revolving",
         "holderName": "VISA Credit",
@@ -66,7 +66,7 @@
     ]
   },
   "Brad":{
-     "riskTolerance": "High",
+     "riskTolerance": "Low",
     "employment": {
       "altId": "2f0a28e9-23df-4936-939b-9dd84a6c2ac7",
       "sourceOfIncomeData": "Encompass",
@@ -83,7 +83,7 @@
       "positionDescription": "Accountant",
       "basePayAmount": 8750.00,
       "unitType": "Office",
-      "monthlyIncomeAmount": 8750.00,
+      "monthlyIncomeAmount": 8750,
       "owner": "Borrower",
       "titlePhone": "512-456-7890",
       "creditScore": 540
@@ -122,7 +122,7 @@
         "nameInAccount": "James Brown",
         "includeTaxesAndInsuranceIndicator": false,
         "requestId": "b7c2d2e2-2222-4f55-aaaa-2d3d3e3e3e3e",
-        "unpaidBalanceAmount": 500,
+        "unpaidBalanceAmount": 3500,
         "id": "Liability/9",
         "liabilityType": "Revolving",
         "holderName": "Mastercard",
@@ -148,7 +148,7 @@
       "positionDescription": "Laborer",
       "basePayAmount": 1666.66,
       "unitType": "Unit",
-      "monthlyIncomeAmount": 1666.66,
+      "monthlyIncomeAmount": 1650,
       "owner": "Borrower",
       "titlePhone": "313-111-2222",
       "creditScore": 400
@@ -213,7 +213,7 @@
     "positionDescription": "CEO",
     "basePayAmount": 50000.00,
     "unitType": "Penthouse",
-    "monthlyIncomeAmount": 50000.00,
+    "monthlyIncomeAmount": 50000,
     "owner": "Borrower",
     "titlePhone": "212-888-8888",
     "creditScore": 840

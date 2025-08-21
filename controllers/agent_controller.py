@@ -63,6 +63,48 @@ def create_agent_executor(static_vars: dict):
         output_key="output",
     )
 
+    prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "You are a financial assistant. When returning comparisons or structured data, format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
+        MessagesPlaceholder(variable_name="chat_history", optional=True),
+        ("human", "{question}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ])
+
+    # 🔒 Bind your dynamic values here so the agent doesn't expect them later
+    prompt = prompt.partial(**static_vars)
+
+    agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
+
+    executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        memory=memory,
+        verbose=True,
+        return_intermediate_steps=False
+    )
+
+    return InvestmentAgent(executor)
+
+
+
+def create_investment_summary(static_vars: dict):
+    load_env()
+
+    llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
+
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True,
+        input_key="question",   # we are using {question} in the prompt
+        output_key="output",
+    )
+    tools = [
+        get_stock_list,
+        get_stock_price,
+    ]
+
+
     base_prompt = ChatPromptTemplate.from_messages([
         ("system",
          """You are a financial assistant.
@@ -84,10 +126,12 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 - Use the given monthly contribution (₹{monthly_contribution}) and tenure ({tenure} years) to calculate the future value under each return range.
 - For each investment option, show:
   * Expected Return (%)
-  * Future Value at {tenure} Years (₹)
+  * Future Value at {tenure} Years (($))
   * Achieved Target? (Yes/No/Maybe, based on comparison with ₹{goal_amount})
   * Suggestions if Target is Not Met (use <br> for line breaks)
-- **Important:** If the goal is achieved in any investment option, stop the table there and do not display the remaining options.
+- **Important:** 
+    * If the goal is achieved (Achieved Target? = Yes) for any investment option, stop the table there (i.e., don’t display further options).
+    * Also, skip Section 2 entirely — no need to show alternative scenarios
 
 The investment options to consider are:
 {investment_options}
@@ -133,15 +177,16 @@ Format both scenarios into tables.
 
 ### 3. Risk Details
 **Risk Level:** {risk_tolerance}
-**Risk Notes:** Tailored recommendations based on user’s risk profile.
-
-Show the suggested percentage split and example stocks aligned with the user's risk profile.
----
+**Risk Notes:** If the user’s risk tolerance is High, explain that they can consider investment options across Low, Medium, and High risk levels.
+If the risk tolerance is Medium, recommend only Low and Medium risk options, and advise caution against high-risk investments.
+If the risk tolerance is Low, recommend only Low-risk options and explicitly advise avoiding medium and high-risk investments to protect their capital.
+Make sure the explanation is clear, friendly, and tailored to guide the user toward suitable investments based on their risk appetite.
+---------
 ### 4. By Market Capitalization:
-Based on the user's contribution and risk tolerance, suggest allocation among:
-- Large-cap (e.g., Apple, Microsoft)
-- Mid-cap
-- Small-cap
+
+{formatted_allocation_table}
+
+Would you like me to suggest specific mutual funds or ETFs that match this allocation?
 
 Important:
 - All values are for the full tenure, factoring in monthly contributions & compounding.
@@ -157,7 +202,7 @@ Important:
     # 🔒 Bind your dynamic values here so the agent doesn't expect them later
     prompt = base_prompt.partial(**static_vars)
 
-    agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
+    agent = create_openai_tools_agent(llm=llm, prompt=prompt , tools=tools)
 
     executor = AgentExecutor(
         agent=agent,

@@ -89,3 +89,51 @@ Your answers must be based ONLY on the profile data provided, not generic advice
 
 def build_chat_agent():
     return chat_prompt | llm
+
+
+
+def get_dynamic_allocation(risk_tolerance: str, monthly_contribution: int):
+    base_allocation = {
+        "low": {"large": 80, "mid": 15, "small": 5},
+        "moderate": {"large": 60, "mid": 25, "small": 15},
+        "high": {"large": 40, "mid": 35, "small": 25},
+    }
+
+    allocation = base_allocation.get(risk_tolerance.lower(), base_allocation["moderate"])
+
+    if monthly_contribution < 10000:
+        shift = min(10, allocation["small"])
+        allocation["large"] += shift
+        allocation["small"] -= shift
+    elif monthly_contribution > 50000:
+        shift = 5
+        allocation["small"] += shift
+        allocation["large"] -= shift
+
+    total = sum(allocation.values())
+    if total != 100:
+        diff = 100 - total
+        allocation["mid"] += diff
+
+    return allocation
+
+
+def format_allocation_table(allocation: dict, monthly_contribution: int) -> str:
+    example_stocks = {
+        "large": ["HDFC Bank", "Infosys", "TCS"],
+        "mid": ["Tata Elxsi", "Page Industries"],
+        "small": ["Suzlon Energy", "Tejas Networks"]
+    }
+
+    def format_inr(value):
+        return f"₹{value:,.0f}"
+
+    table = f"""
+| Market Cap Segment | Suggested Allocation (%) | Amount Range ($) | Investment Style           | Example Stocks/ETFs               |
+|--------------------|--------------------------|------------------|-----------------------------|-----------------------------------|
+| Large-cap          | {allocation["large"]}%                      | {format_inr(monthly_contribution * allocation["large"] / 100)}         | Stable, lower-risk          | {', '.join(example_stocks["large"])}           |
+| Mid-cap            | {allocation["mid"]}%                      | {format_inr(monthly_contribution * allocation["mid"] / 100)}         | Moderate risk, growth focus | {', '.join(example_stocks["mid"])}       |
+| Small-cap          | {allocation["small"]}%                      | {format_inr(monthly_contribution * allocation["small"] / 100)}         | High growth, high volatility| {', '.join(example_stocks["small"])}     |
+""".strip()
+
+    return table
