@@ -4,6 +4,7 @@ from io import StringIO
 
 import pandas as pd
 import streamlit as st
+from streamlit_option_menu import option_menu
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
 from controllers.agent_controller import create_agent_executor, create_investment_summary
@@ -11,11 +12,11 @@ from controllers.employee_agent import generate_financial_summary_langchain, get
 from controllers.flow import get_dynamic_allocation, format_allocation_table
 from controllers.investment_summary import generate_investment_strategy, display_investment_strategy, \
     calculate_goal_duration
-from controllers.newsAPI_controller import get_stock_news
+from controllers.newsAPI_controller import get_stock_news, search_stock_news, get_stock_statistics, get_stock_data, get_related_stocks
+from controllers.beginner_friendly_controller import get_simple_stock_data, get_popular_stocks_overview, get_beginner_news, get_simple_market_sentiment, get_beginner_tips
 from langchain.schema import AIMessage, HumanMessage
 import time
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
-from streamlit_option_menu import option_menu
 from controllers.router_graph import app
 
 
@@ -27,6 +28,58 @@ def img_to_base64(image_path):
     except Exception as e:
         print(f"Error converting image to base64: {str(e)}")
         return None
+
+def extract_stock_symbol(search_query):
+    """
+    Extract stock symbol from search query.
+    
+    Args:
+        search_query (str): The search query entered by user
+    
+    Returns:
+        str: Stock symbol if found, None otherwise
+    """
+    query_lower = search_query.lower().strip()
+    
+    # Common stock symbol mappings
+    symbol_mapping = {
+        'apple': 'AAPL',
+        'aapl': 'AAPL',
+        'microsoft': 'MSFT',
+        'msft': 'MSFT',
+        'google': 'GOOGL',
+        'googl': 'GOOGL',
+        'alphabet': 'GOOGL',
+        'amazon': 'AMZN',
+        'amzn': 'AMZN',
+        'tesla': 'TSLA',
+        'tsla': 'TSLA',
+        'nvidia': 'NVDA',
+        'nvda': 'NVDA',
+        'meta': 'META',
+        'facebook': 'META',
+        'netflix': 'NFLX',
+        'nflx': 'NFLX',
+        'bitcoin': 'BTC-USD',
+        'btc': 'BTC-USD',
+        'crypto': 'BTC-USD'
+    }
+    
+    # Check for exact matches first
+    if query_lower in symbol_mapping:
+        return symbol_mapping[query_lower]
+    
+    # Check if query contains any of the company names
+    for company, symbol in symbol_mapping.items():
+        if company in query_lower:
+            return symbol
+    
+    # Check if query is already a stock symbol (3-5 uppercase letters)
+    import re
+    if re.match(r'^[A-Z]{1,5}$', search_query.upper()):
+        return search_query.upper()
+    
+    return None
 
 
 # Initialize the memory in session state
@@ -564,34 +617,397 @@ def main():
             st.session_state.refresh_news = True
         if "news_data" not in st.session_state:
             st.session_state.news_data = []
+        if "search_query" not in st.session_state:
+            st.session_state.search_query = ""
+        if "is_search_mode" not in st.session_state:
+            st.session_state.is_search_mode = False
+        if "search_results" not in st.session_state:
+            st.session_state.search_results = []
+        if "stock_data" not in st.session_state:
+            st.session_state.stock_data = None
+        if "related_stocks" not in st.session_state:
+            st.session_state.related_stocks = []
 
+        # Header
         col1, col2 = st.columns([10, 3])
         with col1:
             st.markdown("## 📰 Latest Stock Updates")
         with col2:
-            if st.button("## ♻️ Update News", help="Refresh News"):
-                st.session_state.refresh_news = True
+            col2_1, col2_2 = st.columns(2)
+            with col2_1:
+                if st.button("## ♻️ Update News", help="Refresh News"):
+                    st.session_state.refresh_news = True
+                    st.session_state.is_search_mode = False
+                    st.session_state.search_query = ""  # Reset search input
+                    st.rerun()
+            with col2_2:
+                if st.button("## 📊 Refresh Data", help="Refresh Market Data"):
+                    # Clear cache for real-time data
+                    get_stock_statistics.clear()
+                    st.session_state.search_query = ""  # Reset search input
+                    st.rerun()
 
-        if st.session_state.refresh_news:
+                # Search functionality with better alignment
+        st.markdown("### 🔍 Search Stock News")
+        search_col1, search_col2 = st.columns([3, 1])
+        
+        with search_col1:
+            # Stock Statistics Table
+            st.markdown("### 📊 Market Statistics")
+            try:
+                stats = get_stock_statistics()
+                if stats:
+                    col1, col2, col3, col4, col5 = st.columns(5)
+                    
+                    with col1:
+                        st.metric("Market Status", stats.get("market_status", "N/A"))
+                        st.metric("Dow Jones", f"{stats.get('dow_jones', 0):,.0f}")
+                    
+                    with col2:
+                        st.metric("S&P 500", f"{stats.get('sp_500', 0):,.0f}")
+                        st.metric("NASDAQ", f"{stats.get('nasdaq', 0):,.0f}")
+                    
+                    with col3:
+                        st.metric("VIX", f"{stats.get('vix', 0):.2f}")
+                        st.metric("10Y Treasury", f"{stats.get('treasury_10y', 0):.2f}%")
+                    
+                    with col4:
+                        st.metric("Oil Price", f"${stats.get('oil_price', 0):.2f}")
+                        st.metric("Gold Price", f"${stats.get('gold_price', 0):.0f}")
+                    
+                    with col5:
+                        st.metric("Bitcoin", f"${stats.get('bitcoin', 0):,.0f}")
+                        st.metric("Dollar Index", f"{stats.get('dollar_index', 0):.2f}")
+            except Exception as e:
+                st.error("Unable to load market statistics")
+
+        # 🆕 STOCK MARKET GUIDE (NEW ADDITION)
+        st.markdown("---")
+        
+        # Create collapsible section
+        with st.expander("📈 **Stock Market Guide** - Click to expand", expanded=False):
+            st.markdown("*Simple explanations and easy-to-understand insights for all investors*")
+            
+            # Create tabs for features
+            guide_tab1, guide_tab2, guide_tab3, guide_tab4 = st.tabs(["📊 Popular Stocks", "📰 Market News", "🎯 Market Mood", "💡 Investing Tips"])
+        
+            with guide_tab1:
+                st.markdown("#### 📊 **Popular Stocks Overview**")
+                st.markdown("*Quick look at well-known companies and their current status*")
+                
+                if st.button("🔄 Load Popular Stocks", type="primary"):
+                    with st.spinner("Getting popular stocks data..."):
+                        popular_stocks = get_popular_stocks_overview()
+                        
+                        if popular_stocks:
+                            # Display in a simple grid
+                            cols = st.columns(2)
+                            for i, stock in enumerate(popular_stocks):
+                                with cols[i % 2]:
+                                    with st.container():
+                                        st.markdown(f"### {stock['name']} ({stock['symbol']})")
+                                        st.markdown(f"*{stock['description']}*")
+                                        
+                                        # Price and trend
+                                        col_price, col_trend = st.columns(2)
+                                        with col_price:
+                                            st.metric("Price", f"${stock['price']}")
+                                        with col_trend:
+                                            st.markdown(f"**{stock['trend']}**")
+                                        
+                                        # Change info
+                                        change_color = "green" if stock['change'] >= 0 else "red"
+                                        st.markdown(f"<span style='color: {change_color}; font-size: 1.2em;'>📈 {stock['change_pct']:+.2f}% (${stock['change']:+.2f})</span>", unsafe_allow_html=True)
+                                        
+                                        st.markdown(f"**Sector:** {stock['sector']}")
+                                        st.markdown("---")
+                        else:
+                            st.error("Unable to load popular stocks data")
+                
+                # Simple stock lookup
+                st.markdown("#### 🔍 **Look Up Any Stock**")
+                col_lookup1, col_lookup2 = st.columns(2)
+                with col_lookup1:
+                    lookup_symbol = st.text_input("Enter stock symbol (e.g., AAPL)", key="guide_lookup")
+                with col_lookup2:
+                    if st.button("🔍 Look Up", type="secondary"):
+                        if lookup_symbol:
+                            with st.spinner("Getting stock info..."):
+                                stock_info = get_simple_stock_data(lookup_symbol)
+                                if stock_info:
+                                    st.markdown(f"### {stock_info['name']} ({stock_info['symbol']})")
+                                    st.metric("Current Price", f"${stock_info['price']}")
+                                    st.markdown(f"**Trend:** {stock_info['trend']}")
+                                    st.markdown(f"**Change:** {stock_info['change_pct']:+.2f}% (${stock_info['change']:+.2f})")
+                                    st.markdown(f"**Sector:** {stock_info['sector']}")
+                                else:
+                                    st.error(f"Unable to find data for {lookup_symbol}")
+            
+            with guide_tab2:
+                st.markdown("#### 📰 **Market News**")
+                st.markdown("*Easy-to-understand news that affects the stock market*")
+                
+                if st.button("📰 Load Market News", type="primary"):
+                    with st.spinner("Getting market news..."):
+                        market_news = get_beginner_news()
+                        
+                        if market_news:
+                            for article in market_news:
+                                with st.expander(f"📄 {article.get('title', 'No Title')}", expanded=False):
+                                    st.markdown(f"**📰 Source:** {article.get('source', {}).get('name', 'Unknown')}")
+                                    st.markdown(f"**📅 Published:** {article.get('publishedAt', 'Unknown')}")
+                                    
+                                    if article.get('url'):
+                                        st.markdown(f"**[Read Full Article →]({article.get('url')})**")
+                                    
+                                    if article.get("urlToImage"):
+                                        st.image(article["urlToImage"], width=300)
+                                    
+                                    description = article.get('description', '')
+                                    if description:
+                                        st.markdown(f"**📝 Summary:** {description}")
+                                    
+                                    st.markdown("**💡 Why This Matters:** This news could affect stock prices and market sentiment.")
+                        else:
+                            st.error("Unable to load news")
+            
+            with guide_tab3:
+                st.markdown("#### 🎯 **Market Mood**")
+                st.markdown("*Simple explanation of how the overall market is doing*")
+                
+                if st.button("🎯 Check Market Mood", type="primary"):
+                    with st.spinner("Analyzing market mood..."):
+                        sentiment = get_simple_market_sentiment()
+                        st.markdown(f"### {sentiment}")
+                        
+                        # Add simple explanation
+                        if "Bull Market" in sentiment:
+                            st.markdown("**🐂 What this means:** A bull market means most stocks are going up! This is generally good for investors.")
+                        elif "Bear Market" in sentiment:
+                            st.markdown("**🐻 What this means:** A bear market means most stocks are going down. This can be challenging for investors.")
+                        elif "Mostly Positive" in sentiment:
+                            st.markdown("**📈 What this means:** More stocks are going up than down. This is a positive sign for the market.")
+                        elif "Mixed" in sentiment:
+                            st.markdown("**📊 What this means:** Some stocks are going up, some are going down. The market is uncertain.")
+                        
+                        st.markdown("**💡 Tip:** Market mood changes daily. Don't panic over short-term changes!")
+            
+            with guide_tab4:
+                st.markdown("#### 💡 **Investing Tips**")
+                st.markdown("*Simple advice to help you get started with investing*")
+                
+                tips = get_beginner_tips()
+                for tip in tips:
+                    st.markdown(tip)
+                
+                st.markdown("---")
+                st.markdown("#### 📚 **Learning Resources**")
+                st.markdown("""
+                **📖 Books to Read:**
+                - "The Intelligent Investor" by Benjamin Graham
+                - "A Random Walk Down Wall Street" by Burton Malkiel
+                - "The Little Book of Common Sense Investing" by John Bogle
+                
+                **🌐 Websites to Visit:**
+                - Investopedia.com (for definitions)
+                - Yahoo Finance (for stock data)
+                - SEC.gov (for company information)
+                
+                **🎓 Courses to Take:**
+                - Khan Academy Finance
+                - Coursera Investment courses
+                - Local community college classes
+                """)
+
+        # END OF STOCK MARKET GUIDE
+
+        # Use form for better Enter key handling
+        with st.form("search_form", clear_on_submit=False):
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                # Empty space to align with market statistics
+                search_input = st.text_input(
+                    "Enter search term (e.g., 'Apple', 'Tesla', 'Bitcoin', 'Federal Reserve')",
+                    value=st.session_state.search_query,
+                    placeholder="Search for specific stocks, companies, or financial topics...",
+                    key="search_input"
+                )
+            
+            with col2:
+
+                st.write("")
+                st.write("")
+                search_button = st.form_submit_button("🔍 Search", type="primary", use_container_width=True)
+
+        # Handle search on form submission (Enter key or button click)
+        if search_button and search_input.strip():
+            st.session_state.search_query = search_input.strip()
+            st.session_state.is_search_mode = True
+            with st.spinner("Searching for news..."):
+                search_results = search_stock_news(st.session_state.search_query)
+                st.session_state.search_results = search_results
+                
+                # Extract stock symbol and get stock data
+                stock_symbol = extract_stock_symbol(st.session_state.search_query)
+                if stock_symbol:
+                    st.session_state.stock_data = get_stock_data(stock_symbol)
+                    st.session_state.related_stocks = get_related_stocks(stock_symbol)
+                else:
+                    st.session_state.stock_data = None
+                    st.session_state.related_stocks = []
+
+
+        # Fetch general news if not in search mode
+        if st.session_state.refresh_news and not st.session_state.is_search_mode:
             with st.spinner("Fetching latest stock news..."):
                 news_response = get_stock_news()
                 st.session_state.news_data = news_response
                 st.session_state.refresh_news = False
 
-        news_response = st.session_state.news_data
-        if isinstance(news_response, list):
-            for article in news_response:
-                source = article.get("source", {})
-                st.markdown(f"### [{article.get('title', 'No Title')}]({article.get('url', '')})")
-                if article.get("urlToImage"):
-                    st.image(article["urlToImage"], width=400)
-                st.markdown(f"**Source:** {source.get('name', 'Unknown')}")
-                st.markdown(f"**Author:** {article.get('author', 'Unknown')}")
-                st.markdown(f"**Published at:** {article.get('publishedAt', 'Unknown')}")
-                st.markdown(f"{article.get('description', '')}")
-                st.markdown('---')
+        # Display news based on mode
+        if st.session_state.is_search_mode and st.session_state.search_query:
+            # Search results view
+            st.markdown(f"### 🔍 Search Results for: **{st.session_state.search_query}**")
+            
+            # Display stock data if available
+            if st.session_state.stock_data:
+                stock = st.session_state.stock_data
+                st.markdown("### 📈 Stock Information")
+                
+                
+                # Create columns for stock data and related stocks
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    # Stock name and symbol
+                    st.markdown(f"**{stock['name']} ({stock['symbol']})**")
+                    
+                    # Price and change with color coding
+                    change_color = "green" if stock['change'] >= 0 else "red"
+                    change_symbol = "📈" if stock['change'] >= 0 else "📉"
+                    
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center; gap: 20px; margin: 10px 0;">
+                        <div style="font-size: 2em; font-weight: bold;">${stock['price']}</div>
+                        <div style="color: {change_color}; font-size: 1.2em;">
+                            {change_symbol} {stock['change']:+.2f} ({stock['change_pct']:+.2f}%)
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Additional stock info using Streamlit components
+                    col_info1, col_info2, col_info3 = st.columns(3)
+                    with col_info1:
+                        st.metric("Previous Close", f"${stock['prev_close']}")
+                    with col_info2:
+                        st.metric("Currency", stock['currency'])
+                    with col_info3:
+                        if stock['market_cap'] > 0:
+                            market_cap_formatted = f"${stock['market_cap']/1e12:.2f}T" if stock['market_cap'] > 1e12 else f"${stock['market_cap']/1e9:.2f}B"
+                            st.metric("Market Cap", market_cap_formatted)
+                        else:
+                            st.metric("Market Cap", "N/A")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    # Related stocks table
+                    if st.session_state.related_stocks:
+                        st.markdown("### 🔗 Related Stocks")
+                        
+                        # Create a table for related stocks
+                        related_data = []
+                        for stock in st.session_state.related_stocks:
+                            change_color = "🟢" if stock['change'] >= 0 else "🔴"
+                            related_data.append({
+                                "Symbol": stock['symbol'],
+                                "Price": f"${stock['price']}",
+                                "Change": f"{change_color} {stock['change_pct']:+.2f}%"
+                            })
+                        
+                        if related_data:
+                            import pandas as pd
+                            df_related = pd.DataFrame(related_data)
+                            st.dataframe(df_related, use_container_width=True, hide_index=True)
+            
+            if st.session_state.search_results:
+                # Show search results as a list with toggle
+                for i, article in enumerate(st.session_state.search_results):
+                    source = article.get("source", {})
+                    
+                    # Create expandable container for search results
+                    with st.expander(f"📄 {article.get('title', 'No Title')}", expanded=True):
+                        # Article title as clickable link
+                        if article.get('url'):
+                            st.markdown(f"**[Read Full Article →]({article.get('url')})**")
+                        
+                        # Article image
+                        if article.get("urlToImage"):
+                            st.image(article["urlToImage"], width=500)
+                        
+                        # Article metadata
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.markdown(f"**📰 Source:** {source.get('name', 'Unknown')}")
+                        with col2:
+                            st.markdown(f"**✍️ Author:** {article.get('author', 'Unknown')}")
+                        with col3:
+                            published_date = article.get('publishedAt', 'Unknown')
+                            if published_date != 'Unknown':
+                                try:
+                                    from datetime import datetime
+                                    dt = datetime.fromisoformat(published_date.replace('Z', '+00:00'))
+                                    formatted_date = dt.strftime('%Y-%m-%d %H:%M')
+                                    st.markdown(f"**📅 Published:** {formatted_date}")
+                                except:
+                                    st.markdown(f"**📅 Published:** {published_date}")
+                            else:
+                                st.markdown(f"**📅 Published:** {published_date}")
+                        
+                        # Article description
+                        description = article.get('description', '')
+                        if description:
+                            st.markdown(f"**📝 Summary:** {description}")
+                        
+                        # External link button
+                        if article.get('url'):
+                            st.markdown(f"[🔗 Open External Link]({article.get('url')})")
+                    
+                    # Add separator between articles
+                    if i < len(st.session_state.search_results) - 1:
+                        st.markdown("---")
+            else:
+                st.warning(f"🔍 No news found for '{st.session_state.search_query}'. Try a different search term.")
+            
+            # Clear search button
+            if st.button("🔍 Clear Search", help="Return to General News"):
+                st.session_state.is_search_mode = False
+                st.session_state.search_query = ""
+                st.session_state.search_results = []
+                st.session_state.stock_data = None
+                st.session_state.related_stocks = []
+                st.rerun()
         else:
-            st.write(news_response)
+            # General news view (original format - no collapsible)
+            news_response = st.session_state.news_data
+            if isinstance(news_response, list) and news_response:
+                for article in news_response:
+                    source = article.get("source", {})
+                    st.markdown(f"### [{article.get('title', 'No Title')}]({article.get('url', '')})")
+                    if article.get("urlToImage"):
+                        st.image(article["urlToImage"], width=400)
+                    st.markdown(f"**Source:** {source.get('name', 'Unknown')}")
+                    st.markdown(f"**Author:** {article.get('author', 'Unknown')}")
+                    st.markdown(f"**Published at:** {article.get('publishedAt', 'Unknown')}")
+                    st.markdown(f"{article.get('description', '')}")
+                    st.markdown('---')
+            elif isinstance(news_response, list) and not news_response:
+                st.warning("📰 No news available at the moment. Please try refreshing.")
+            else:
+                st.write(news_response)
+
+
 
 
 if __name__ == "__main__":
