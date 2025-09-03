@@ -128,16 +128,16 @@ Given the user profile, investment inputs, and target goal, calculate the final 
   * Expected Return (%)
   * Future Value at {tenure} Years (($))
   * Achieved Target? (Yes/No/Maybe, based on comparison with ₹{goal_amount})
-  * Suggestions if Target is Not Met (use <br> for line breaks)
+  * Suggestions if Target is Not Met
 - **Important:** 
     * If the goal is achieved (Achieved Target? = Yes) for any investment option, stop the table there (i.e., don’t display further options).
-    * Also, skip Section 2 entirely — no need to show alternative scenarios
+    * Also, skip Section 2 entirely and run section 3 — no need to show alternative scenarios
 
 The investment options to consider are:
 {investment_options}
 
 Table format:
-| Investment Option | Expected Return (%) | Future Value at {tenure} Years (₹) | Achieved Target? | Suggestions if Target is Not Met |
+| Investment Option | Expected Return (%) | Future Value at {tenure} Years ($) | Achieved Target? | Suggestions if Target is Not Met |
 |-------------------|---------------------|-------------------------------------|------------------|----------------------------------|
 | <option>          | <range>             | <value>                             | Yes/No/Maybe     | <suggestions> |
 
