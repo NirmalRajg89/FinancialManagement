@@ -117,7 +117,7 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 - Always format numbers in Indian numbering style with commas.
 - Prefix all monetary values with ₹.
 - Always show percentages with the % symbol.
-- In Suggestions column, show each recommendation on a new line using line breaks (- item 1<br>- item 2).
+- In Suggestions column, show each recommendation on a new line using line breaks (- item 1 - item 2).
 - Never leave numbers in raw form.
 
 -------
@@ -164,14 +164,7 @@ Format both scenarios into tables.
 
 ---
 
-### 3. Risk Details
-**Risk Level:** {risk_tolerance}
-**Risk Notes:** If the user’s risk tolerance is High, explain that they can consider investment options across Low, Medium, and High risk levels.
-If the risk tolerance is Medium, recommend only Low and Medium risk options, and advise caution against high-risk investments.
-If the risk tolerance is Low, recommend only Low-risk options and explicitly advise avoiding medium and high-risk investments to protect their capital.
-Make sure the explanation is clear, friendly, and tailored to guide the user toward suitable investments based on their risk appetite.
----------
-### 4. By Market Capitalization:
+### 3. By Market Capitalization:
 
 {formatted_allocation_table}
 

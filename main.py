@@ -205,6 +205,7 @@ def main():
             employment = user_profile["employment"]
             assets = user_profile["assets"]
             liabilities = user_profile["liabilities"]
+            monthlyPaymentAmount = sum(l["monthlyPaymentAmount"] for l in liabilities)
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
 
             summary_data = {
@@ -232,21 +233,55 @@ def main():
             plan_type = st.radio("Select Plan Type", ["Short-term", "Long-term"], horizontal=True)
 
             # Calculate disposable income
-            disposable_income = employment["monthlyIncomeAmount"] - total_liabilities
+            disposable_income = employment["monthlyIncomeAmount"] - monthlyPaymentAmount
+
+            income_risk_ratios = {"Low": 0.3, "Moderate": 0.5, "High": 0.7}
+
+            # Determine income-based risk tolerance ratio
+            if employment["monthlyIncomeAmount"] > 20000:
+                income_risk_tolerance = income_risk_ratios['High']
+            elif employment["monthlyIncomeAmount"] > 7000:
+                income_risk_tolerance = income_risk_ratios['Moderate']
+            else:
+                income_risk_tolerance = income_risk_ratios['Low']
+
+            default_values = {
+                "Emergency-fund": {"tenure": 6, "goal_amount": 22000},
+
+                "Education": {"tenure": 24, "goal_amount": 80000},
+
+                "Car": {"tenure": 12, "goal_amount": 35000},
+
+                "Bike": {"tenure": 6, "goal_amount": 15000}
+            }
+
+            default_long_term_values = {
+                "Retirement": {
+                    "tenure": 20,
+                    "goal_amount": 1000000
+                },
+                "Home": {
+                    "tenure": 15,
+                    "goal_amount": 450000
+                }
+            }
 
             if plan_type == "Short-term":
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    goals = st.selectbox("Goal", ["Investment", "Education", "Car", "Bike"])
+                    goals = st.selectbox("Goal", ["Emergency-fund", "Education", "Car", "Bike"])
 
                 with col2:
-                    tenure = st.selectbox("Duration", ["5 years","6 months", "1 year", "2 years", "3 years"])
+                    tenure = st.number_input("Duration(in months)", min_value=6, max_value=60, value=default_values[goals]['tenure'], step=1) * 1/12
 
                 with col3:
-                    default_contribution = round(disposable_income * 0.4, 2)
+                    # Calculate default contribution as percentage of disposable income
+                    default_contribution = round(disposable_income * income_risk_tolerance, 2)
+
+                    # Assume st.number_input is from Streamlit, setting input with defaults and limits
                     monthly_contribution = st.number_input(
-                        "Monthly Investment - 60% (Income - Expense)",
+                        label=f"Monthly Investment - {int(income_risk_tolerance * 100)}% (Income - Liabilities)($)",
                         min_value=100.0,
                         max_value=float(employment["monthlyIncomeAmount"]),
                         value=default_contribution,
@@ -255,30 +290,26 @@ def main():
 
                 with col4:
                     goal_amount = st.number_input(
-                        "Expected Goal Amount",
+                        "Expected Goal Amount($)",
                         min_value=1000.0,
                         max_value=1_00_00_000.0,
                         step=1000.0,
-                        value=10_00_000.0
+                        value=float(default_values[goals]['goal_amount'])
                     )
 
             elif plan_type == "Long-term":
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    goals = st.selectbox("Goal", ["Retirement", "Home", "Others"])
+                    goals = st.selectbox("Goal", ["Retirement", "Home"])
 
                 with col2:
-                    current_age = st.number_input("Current Age", min_value=18, max_value=70, value=30, step=1)
-                    expected_age = st.number_input("Expected Age at Goal", min_value=current_age + 1, max_value=100,
-                                                   value=60, step=1)
-                    tenure = f"{expected_age - current_age} years"
-                    st.text_input("Duration", tenure, disabled=True)
+                    tenure = st.number_input("Duration(in years)", min_value=7, max_value=30, value=default_long_term_values[goals]['tenure'], step=1)
 
                 with col3:
-                    default_contribution = round(disposable_income * 0.6, 2)
+                    default_contribution = round(disposable_income * income_risk_tolerance, 2)
                     monthly_contribution = st.number_input(
-                        "Investment(60% Salary - Liabilities)",
+                        label=f"Monthly Investment - {int(income_risk_tolerance * 100)}% (Income - Liabilities) ($)",
                         min_value=100.0,
                         max_value=float(employment["monthlyIncomeAmount"]),
                         value=default_contribution,
@@ -287,11 +318,11 @@ def main():
 
                 with col4:
                     goal_amount = st.number_input(
-                        "Expected Goal Amount",
+                        "Expected Goal Amount($)",
                         min_value=1000.0,
                         max_value=5_00_00_000.0,
                         step=10000.0,
-                        value=2000000.0
+                        value=float(default_long_term_values[goals]['goal_amount'])
                     )
 
             risk_level = user_profile.get("riskTolerance", "Moderate")
