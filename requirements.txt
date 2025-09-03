@@ -15,3 +15,5 @@ streamlit-option-menu
 qdrant_client
 langchain-qdrant
 yfinance
+plotly
+numpy
