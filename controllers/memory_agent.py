@@ -35,8 +35,9 @@ def memory_agent(query, chat_history=None):
                 return {
                     "result": "I'm here to assist with financial-investments-related questions only and this query seems to be out-of-scope."}
             return {"result": memory_response}
-        else :
-            return {
-                "result": "I'm here to assist with financial-investments-related questions only and this query seems to be out-of-scope."}
+
+    return {
+        "result": "I'm here to assist with financial-investments-related questions only and this query seems to be out-of-scope."}
+
 
 

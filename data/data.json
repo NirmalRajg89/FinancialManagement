@@ -1,0 +1,275 @@
+[
+    {
+        "servicing_loan": {
+            "loan_number": "244911511",
+            "gr_loan_guid": "ff488969-942b-4dac-b84d-fb5e57b514de",
+            "encompass_loan_guid": "{abb7e553-cc0f-4dc1-9287-57fc59dd98a3}",
+            "loan_amount": 262500.0,
+            "loan_purpose": "Purchase",
+            "ltv": 75.0,
+            "current_escrow_balance": 2370.74,
+            "current_monthly_payment": 2516.84,
+            "current_upb": 258905.02,
+            "lien_position": "First Lien",
+            "loan_type": "Conventional",
+            "amortization_type": "FIXED",
+            "boarding_date": "2024-05-01T00:00:00",
+            "investor_name": "Fannie Mae",
+            "last_known_active_serviced_date": "2025-07-24T00:00:00",
+            "last_known_active_upb": 0,
+            "original_monthly_payment": 2499.22,
+            "next_due_date": "2025-08-01T00:00:00",
+            "paid_in_full_date": null,
+            "purchase_advice_amount": 262290.08,
+            "purchased_date": "2024-06-10T00:00:00",
+            "data_date": "2025-07-25T06:26:08.21",
+            "first_payment_due_date": "2024-06-01T00:00:00",
+            "funded_date": "2024-04-26T00:00:00",
+            "msr_investor_name": "",
+            "investor": {
+                "name": "",
+                "type": "",
+                "recast_eligible": "",
+                "recast_fee": 0,
+                "recast_requirements": "",
+                "epo_days": "",
+                "epo_requirements": ""
+            },
+            "investor_loan_number": "4031688190",
+            "msr_sale_date": null,
+            "first_payment_due_investor": "2024-07-01T00:00:00",
+            "last_payment_received_date": "2025-07-02T00:00:00",
+            "tax_paid_at_closing": 3113.0,
+            "insurance_paid_at_closing": 2268.46,
+            "next_ins_due_date": "2026-06-01T00:00:00",
+            "next_tax_due_date": "2025-10-01T00:00:00",
+            "communications": [
+                {
+                    "loadDate": "2025-07-25T05:11:58.69",
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "contactType": "Email",
+                    "campaignName": "FUNDED - 1A",
+                    "contactDate": "2024-04-29T00:00:00",
+                    "callDisposition": ""
+                },
+                {
+                    "loadDate": "2025-07-25T05:12:00.77",
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "contactType": "SMS Text",
+                    "campaignName": "FUNDED - 1A",
+                    "contactDate": "2024-04-29T03:29:32.03",
+                    "callDisposition": ""
+                },
+                {
+                    "loadDate": "2025-07-25T05:12:00.77",
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "contactType": "SMS Text",
+                    "campaignName": "ACTIVE - 2",
+                    "contactDate": "2024-05-03T03:36:29.1",
+                    "callDisposition": ""
+                }
+            ],
+            "transactions": [
+                {
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "transactionDate": "2025-07-02T00:00:00",
+                    "transactionCode": "171",
+                    "transactionDescription": "Payments",
+                    "escrowPaidAmount": 748.33,
+                    "insurancePaidAmount": 0.0,
+                    "interestPaidAmount": 1538.61,
+                    "lateFeesPaidAmount": 0.0,
+                    "nonRecoverableAdvBalance": 0.0,
+                    "otherPaidAmount": 0.0,
+                    "principalAmount": 229.9,
+                    "recoverableAdvBalance": 0.0,
+                    "suspenseAmount": 0.0,
+                    "suspenseBalance": 0.0,
+                    "totalAmountPaid": 2516.84,
+                    "dueDate": "2025-07-01T00:00:00"
+                }
+            ],
+            "loan_status": "Funded",
+            "file_creation_date": "2024-03-22T00:00:00",
+            "loan_officer": "John Berger",
+            "loan_program": "Freddie Mac Conforming 30 Year Fixed",
+            "cc_fees_paid": null,
+            "taxes_monthly_amount": 530.25,
+            "haz_insurance_monthly_amount": 218.08,
+            "escrow_purchased": null,
+            "repurchase_date": null,
+            "pa_recon_date": null,
+            "wire_recon_sent_date": null,
+            "wire_ref_number": "",
+            "p_and_i_payment": 1768.51,
+            "cc_active_snow_case": "",
+            "t_and_i_payment": 748.33,
+            "loss_draft_number": "(833)-888-6807",
+            "ybr_trade_indicator": "",
+            "loan_snow_sys_id": "5e8d758a47d50a142e6ea7ba116d43c7",
+            "email_campaigns": [],
+            "escrow_lines": [
+                {
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "typeCode": "351",
+                    "typeCodeDescription": "HOMEOWNERS INSURANCE ",
+                    "company": "USAA GROUP",
+                    "lastPaidAmount": -2704.89,
+                    "lastPaidDate": "2025-05-20T00:00:00",
+                    "expirationDate": "2026-06-25T00:00:00",
+                    "policyNumber": "00804326793A",
+                    "nextDueDate": "2026-06-01T00:00:00",
+                    "nextDueAmount": 2704.89,
+                    "ccActiveSnowCase": ""
+                },
+                {
+                    "loanNumber": "244911511",
+                    "servicerLoanNumber": "5110329101",
+                    "typeCode": "312",
+                    "typeCodeDescription": "COUNTY TAX ",
+                    "company": "COUNTY TAX ",
+                    "lastPaidAmount": -3156.0,
+                    "lastPaidDate": "2025-04-17T00:00:00",
+                    "expirationDate": null,
+                    "policyNumber": "30812476",
+                    "nextDueDate": "2025-10-01T00:00:00",
+                    "nextDueAmount": 3113.0,
+                    "ccActiveSnowCase": ""
+                }
+            ]
+        },
+        "company_code": "GRI",
+        "company_key": 1,
+        "current_servicer": {
+            "id": 1278,
+            "name": "Guaranteed Rate Inc. (c/o ServiceMac, LLC)",
+            "phone": "+18666812264",
+            "website": "https://www.rate.com/SM",
+            "payment_url": "https://www.rate.com/SM",
+            "email": "support@myrateservicing.com",
+            "tax_payment_email": "taxes.servicing@rate.com",
+            "business_hours": null,
+            "address": {
+                "street": "P.O. Box 105178",
+                "city": "Atlanta",
+                "county": "",
+                "state": "GA",
+                "postal_code": "30348-5178"
+            }
+        },
+        "interim_servicer": null,
+        "scenario": {
+            "id": 13,
+            "description": "",
+            "messages": [
+                {
+                    "scenario_id": 13,
+                    "message_type": "RATE.COM_MESSAGE",
+                    "message_body": "Your loan is Active and currently being managed by Guaranteed Rate"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "MYACCOUNT_MESSAGE",
+                    "message_body": "Your loan is active and currently being managed by Guaranteed Rate"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "MYACCOUNT_STATUS_BOX",
+                    "message_body": "Active loan"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "INTRANET_MESSAGE",
+                    "message_body": "This loan is currently being serviced at our sub-servicer and has not yet been sold The customer can access their account online, make payments, and set recurring, etc. at the website below"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "INTRANET_STATUS_BOX",
+                    "message_body": "Actively serviced by our Sub-servicer"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "YBR_MESSAGE",
+                    "message_body": "This loan is currently being serviced at our sub-servicer and has not yet been sold The customer can access their account online, make payments, and set recurring, etc. at the website below"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "YBR_STATUS_BOX",
+                    "message_body": "Active at ServiceMac"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "VP_LOOKUP_MESSAGE",
+                    "message_body": "This loan is currently being serviced in our name, by our subservicer. \nThe customer can access their account online, make payments, and set recurring, etc. at the specified website"
+                },
+                {
+                    "scenario_id": 13,
+                    "message_type": "VP_LOOKUP_STATUS",
+                    "message_body": "Actively serviced by Rate"
+                }
+            ]
+        },
+        "servicing": {
+            "loan_number": "5110329101",
+            "gr_loan_guid": "ff488969-942b-4dac-b84d-fb5e57b514de",
+            "encompass_loan_guid": "{abb7e553-cc0f-4dc1-9287-57fc59dd98a3}",
+            "transfer_date": null,
+            "transfer_type": null,
+            "goodbye_letter_date": null,
+            "current_servicer_id": 1278,
+            "prior_servicer_loan_number": "",
+            "los_servicer_tag": "SM",
+            "msp_loan_number": "",
+            "sub_servicer_loan_number": "",
+            "initial_escrow_wire_sent": "2024-05-02T00:00:00",
+            "prior_servicer_type": ""
+        },
+        "sub_servicer": {
+            "id": 1278,
+            "name": "Guaranteed Rate Inc. (c/o ServiceMac, LLC)",
+            "phone": "+18666812264",
+            "website": "https://www.rate.com/SM",
+            "payment_url": "https://www.rate.com/SM",
+            "email": "support@myrateservicing.com",
+            "tax_payment_email": "taxes.servicing@rate.com",
+            "business_hours": null,
+            "address": {
+                "street": "P.O. Box 105178",
+                "city": "Atlanta",
+                "county": "",
+                "state": "GA",
+                "postal_code": "30348-5178"
+            }
+        },
+        "new_servicer": null,
+        "display_servicer": {
+            "id": 1278,
+            "name": "Guaranteed Rate Inc. (c/o ServiceMac, LLC)",
+            "phone": "+18666812264",
+            "website": "https://www.rate.com/SM",
+            "payment_url": "https://www.rate.com/SM",
+            "email": "support@myrateservicing.com",
+            "tax_payment_email": "taxes.servicing@rate.com",
+            "business_hours": null,
+            "address": {
+                "street": "P.O. Box 105178",
+                "city": "Atlanta",
+                "county": "",
+                "state": "GA",
+                "postal_code": "30348-5178"
+            }
+        },
+        "escalation": {
+            "sales_division": "Midwest",
+            "sales_region_escalation": "Sandy Sims",
+            "sales_poc": "Sandy Sims",
+            "sales_manager": "Lori Spisak"
+        },
+        "redirect_type": ""
+    }
+]

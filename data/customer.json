@@ -1,0 +1,282 @@
+
+  {
+    "Amanda":{
+      "riskTolerance": "Moderate",
+    "employment": {
+      "altId": "1e4c45a2-d9a2-4f64-91a2-709fefb7a001",
+      "sourceOfIncomeData": "Encompass",
+      "noLinkToDocTrackIndicator": true,
+      "startDate": "2018-03-15T00:00:00Z",
+      "currentEmploymentIndicator": true,
+      "addressState": "CA",
+      "addressStreetLine1": "123 Tech Park",
+      "addressCity": "Los Angeles",
+      "employmentStartDate": "2018-03-15T00:00:00Z",
+      "id": "Employment/0",
+      "employerName": "Amanda",
+      "selfEmployedIndicator": false,
+      "positionDescription": "Software Engineer",
+      "basePayAmount": 8333.33,
+      "unitType": "Office",
+      "monthlyIncomeAmount": 8333,
+      "owner": "Borrower",
+      "titlePhone": "555-123-4567",
+      "creditScore": 745
+    },
+    "assets": [
+      {
+        "altId": "_1001",
+        "accountIdentifier": "1122",
+        "vodIndex": 1,
+        "sourceOfAssetData": "Encompass",
+        "depositoryAccountGuid": "a12e1b11-9988-4e02-a3f9-0012aa345678",
+        "noLinkToDocTrackIndicator": true,
+        "urla2020CashOrMarketValueAmount": 15000,
+        "assetType": "CheckingAccount",
+        "total": 15000,
+        "isVod": true,
+        "id": "Asset/18",
+        "assetIndex": 18,
+        "holderName": "Bank of California",
+        "includeInAusExport": true,
+        "owner": "Borrower"
+      }
+    ],
+    "liabilities": [
+      {
+        "volIndex": 6,
+        "accountIdentifier": "411711911",
+        "liabilityIndex": 8,
+        "payoffStatusIndicator": false,
+        "payoffIncludedIndicator": false,
+        "accountIndicator": true,
+        "noLinkToDocTrackIndicator": true,
+        "uCDPayoffType": "",
+        "creditLimit": 5000,
+        "monthlyPaymentAmount": 100,
+        "nameInAccount": "John Smith",
+        "includeTaxesAndInsuranceIndicator": false,
+        "requestId": "a7b1c1d1-1111-4f33-9aaa-1c2c2e2e2e2e",
+        "unpaidBalanceAmount": 1800,
+        "id": "Liability/8",
+        "liabilityType": "Revolving",
+        "holderName": "VISA Credit",
+        "owner": "Borrower"
+      }
+    ]
+  },
+  "Brad":{
+     "riskTolerance": "Low",
+    "employment": {
+      "altId": "2f0a28e9-23df-4936-939b-9dd84a6c2ac7",
+      "sourceOfIncomeData": "Encompass",
+      "noLinkToDocTrackIndicator": true,
+      "startDate": "2020-01-01T00:00:00Z",
+      "currentEmploymentIndicator": true,
+      "addressState": "TX",
+      "addressStreetLine1": "456 Finance St",
+      "addressCity": "Austin",
+      "employmentStartDate": "2020-01-01T00:00:00Z",
+      "id": "Employment/1",
+      "employerName": "Brad",
+      "selfEmployedIndicator": false,
+      "positionDescription": "Accountant",
+      "basePayAmount": 8750.00,
+      "unitType": "Office",
+      "monthlyIncomeAmount": 8750,
+      "owner": "Borrower",
+      "titlePhone": "512-456-7890",
+      "creditScore": 540
+    },
+    "assets": [
+      {
+        "altId": "_2001",
+        "accountIdentifier": "3344",
+        "vodIndex": 1,
+        "sourceOfAssetData": "Encompass",
+        "depositoryAccountGuid": "b22b2b22-aaa1-4dd2-aaa3-2a3a3a3a3a3a",
+        "noLinkToDocTrackIndicator": true,
+        "urla2020CashOrMarketValueAmount": 12000,
+        "assetType": "CheckingAccount",
+        "total": 12000,
+        "isVod": true,
+        "id": "Asset/19",
+        "assetIndex": 19,
+        "holderName": "Capital One",
+        "includeInAusExport": true,
+        "owner": "Borrower"
+      }
+    ],
+    "liabilities": [
+      {
+        "volIndex": 7,
+        "accountIdentifier": "877755",
+        "liabilityIndex": 9,
+        "payoffStatusIndicator": false,
+        "payoffIncludedIndicator": false,
+        "accountIndicator": true,
+        "noLinkToDocTrackIndicator": true,
+        "uCDPayoffType": "",
+        "creditLimit": 4000,
+        "monthlyPaymentAmount": 60,
+        "nameInAccount": "James Brown",
+        "includeTaxesAndInsuranceIndicator": false,
+        "requestId": "b7c2d2e2-2222-4f55-aaaa-2d3d3e3e3e3e",
+        "unpaidBalanceAmount": 3500,
+        "id": "Liability/9",
+        "liabilityType": "Revolving",
+        "holderName": "Mastercard",
+        "owner": "Borrower"
+      }
+    ]
+  },
+  "Chris":{
+     "riskTolerance": "low",
+    "employment": {
+      "altId": "3c8e0d78-0b33-4a9e-bc12-3f534646f9d3",
+      "sourceOfIncomeData": "Encompass",
+      "noLinkToDocTrackIndicator": true,
+      "startDate": "2022-05-01T00:00:00Z",
+      "currentEmploymentIndicator": true,
+      "addressState": "MI",
+      "addressStreetLine1": "789 Budget Ln",
+      "addressCity": "Detroit",
+      "employmentStartDate": "2022-05-01T00:00:00Z",
+      "id": "Employment/2",
+      "employerName": "Chris",
+      "selfEmployedIndicator": false,
+      "positionDescription": "Laborer",
+      "basePayAmount": 1666.66,
+      "unitType": "Unit",
+      "monthlyIncomeAmount": 1650,
+      "owner": "Borrower",
+      "titlePhone": "313-111-2222",
+      "creditScore": 400
+    },
+    "assets": [
+      {
+        "altId": "_3001",
+        "accountIdentifier": "4455",
+        "vodIndex": 1,
+        "sourceOfAssetData": "Encompass",
+        "depositoryAccountGuid": "c33c3c33-3333-4cc4-ccc4-3c3c3c3c3c3c",
+        "noLinkToDocTrackIndicator": true,
+        "urla2020CashOrMarketValueAmount": 200,
+        "assetType": "CheckingAccount",
+        "total": 200,
+        "isVod": true,
+        "id": "Asset/20",
+        "assetIndex": 20,
+        "holderName": "Metro Bank",
+        "includeInAusExport": true,
+        "owner": "Borrower"
+      }
+    ],
+    "liabilities": [
+      {
+        "volIndex": 8,
+        "accountIdentifier": "999111",
+        "liabilityIndex": 10,
+        "payoffStatusIndicator": false,
+        "payoffIncludedIndicator": false,
+        "accountIndicator": true,
+        "noLinkToDocTrackIndicator": true,
+        "uCDPayoffType": "",
+        "creditLimit": 1000,
+        "monthlyPaymentAmount": 150,
+        "nameInAccount": "Tom Low",
+        "includeTaxesAndInsuranceIndicator": false,
+        "requestId": "d7e3f3g3-3333-4g66-aaaa-3f4f4f4f4f4f",
+        "unpaidBalanceAmount": 5000,
+        "id": "Liability/10",
+        "liabilityType": "Installment",
+        "holderName": "Loan Shark Inc",
+        "owner": "Borrower"
+      }
+    ]
+  },
+  "David":{
+    "riskTolerance": "High",
+  "employment": {
+    "altId": "4d22fe41-8e41-47ff-9a17-0911f63b5b88",
+    "sourceOfIncomeData": "Encompass",
+    "noLinkToDocTrackIndicator": true,
+    "startDate": "2010-07-01T00:00:00Z",
+    "currentEmploymentIndicator": true,
+    "addressState": "NY",
+    "addressStreetLine1": "1 Wall Street",
+    "addressCity": "New York",
+    "employmentStartDate": "2010-07-01T00:00:00Z",
+    "id": "Employment/3",
+    "employerName": "Global Holdings Inc.",
+    "selfEmployedIndicator": true,
+    "positionDescription": "CEO",
+    "basePayAmount": 50000.00,
+    "unitType": "Penthouse",
+    "monthlyIncomeAmount": 50000,
+    "owner": "Borrower",
+    "titlePhone": "212-888-8888",
+    "creditScore": 840
+  },
+  "assets": [
+    {
+      "altId": "_4001",
+      "accountIdentifier": "9988",
+      "vodIndex": 1,
+      "sourceOfAssetData": "Encompass",
+      "depositoryAccountGuid": "d44d4d44-4444-4dd4-ddd4-4d4d4d4d4d4d",
+      "noLinkToDocTrackIndicator": true,
+      "urla2020CashOrMarketValueAmount": 250000,
+      "assetType": "InvestmentAccount",
+      "total": 250000,
+      "isVod": true,
+      "id": "Asset/21",
+      "assetIndex": 21,
+      "holderName": "Goldman Sachs",
+      "includeInAusExport": true,
+      "owner": "Borrower"
+    },
+    {
+      "altId": "_4002",
+      "accountIdentifier": "8877",
+      "vodIndex": 2,
+      "sourceOfAssetData": "Encompass",
+      "depositoryAccountGuid": "e55e5e55-5555-4ee5-eeee-5e5e5e5e5e5e",
+      "noLinkToDocTrackIndicator": true,
+      "urla2020CashOrMarketValueAmount": 75000,
+      "assetType": "SavingsAccount",
+      "total": 75000,
+      "isVod": true,
+      "id": "Asset/22",
+      "assetIndex": 22,
+      "holderName": "Chase Private Client",
+      "includeInAusExport": true,
+      "owner": "Borrower"
+    }
+  ],
+  "liabilities": [
+    {
+      "volIndex": 9,
+      "accountIdentifier": "776655",
+      "liabilityIndex": 11,
+      "payoffStatusIndicator": false,
+      "payoffIncludedIndicator": false,
+      "accountIndicator": true,
+      "noLinkToDocTrackIndicator": true,
+      "uCDPayoffType": "",
+      "creditLimit": 20000,
+      "monthlyPaymentAmount": 300,
+      "nameInAccount": "Wealthy Client",
+      "includeTaxesAndInsuranceIndicator": false,
+      "requestId": "f8g4h4i4-4444-4h77-aaaa-4g5g5g5g5g5g",
+      "unpaidBalanceAmount": 1500,
+      "id": "Liability/11",
+      "liabilityType": "Revolving",
+      "holderName": "AMEX Platinum",
+      "owner": "Borrower"
+    }
+  ]
+}
+  }
+
+
