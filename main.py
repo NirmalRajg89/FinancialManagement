@@ -85,8 +85,8 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor"],
-            icons=["clipboard-data", "graph-up-arrow"],
+            options=["Stock News", "Financial Advisor", "Financial"],
+            icons=["clipboard-data", "graph-up-arrow", "graph-up-arrow"],
             menu_icon="cast",
             default_index=1,
         )
@@ -107,7 +107,7 @@ def main():
         )
 
     if mode == "Financial":
-        st.title("💼 Financial Advisor")
+        st.title("💼 Financial")
 
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
@@ -146,42 +146,8 @@ def main():
 
                 output_placeholder.markdown(full_response)
 
-    elif mode == "Fitness Wellness":
-        st.title("🧘 Your Fitness & Wellness Coach")
-        st.write("Ask me anything about workouts, yoga, mental wellness, or diet. I'll even share videos when helpful.")
-
-        if "chat_history_wellness" not in st.session_state:
-            st.session_state.chat_history_wellness = []
-
-        for question, answer in st.session_state.chat_history_wellness:
-            with st.chat_message("user"):
-                st.markdown(question)
-            with st.chat_message("assistant"):
-                st.markdown(answer)
-                for link in extract_youtube_links(answer):
-                    st.video(link)
-
-        user_input = st.chat_input("What do you want help with today?")
-
-        if user_input:
-            st.chat_message("user").markdown(user_input)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Getting expert advice..."):
-                    response = get_wellness_response(user_input)
-                    output_placeholder = st.empty()
-                    full_response = ""
-                    for char in response:
-                        full_response += char
-                        output_placeholder.markdown(full_response + "▌")
-                        time.sleep(0.01)
-                    for link in extract_youtube_links(response):
-                        st.video(link)
-            output_placeholder.markdown(full_response)
-            st.session_state.chat_history_wellness.append((user_input, response))
-
     # Dummy function placeholder for your AI agent
-    if mode == "Financial Advisor":
+    elif mode == "Financial Advisor":
 
         # Load user data
         with open("data/customer.json") as f:
@@ -591,6 +557,7 @@ def main():
 
                     st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                     st.rerun()
+
     else:
         # Handle initial state for stock news
         if "refresh_news" not in st.session_state:
