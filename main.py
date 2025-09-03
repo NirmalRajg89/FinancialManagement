@@ -207,14 +207,53 @@ def main():
             liabilities = user_profile["liabilities"]
             monthlyPaymentAmount = sum(l["monthlyPaymentAmount"] for l in liabilities)
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
+            total_assets = sum(a["total"] for a in assets)
+            dti = monthlyPaymentAmount / user_profile["employment"]["monthlyIncomeAmount"]
 
             summary_data = {
                 "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
                 "Total Assets ($)": [sum(a["total"] for a in assets)],
                 "Total Liabilities ($)": total_liabilities,
+                "Monthly Debt Payments ($)": [monthlyPaymentAmount],
+                "Debt-to-Income Ratio (%)": [
+                    round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)],
+                "Net Worth ($)": [sum(a["total"] for a in assets) - total_liabilities],
+                "Cash Reserves ($)": [
+                    sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])],
             }
-            st.table(pd.DataFrame(summary_data))
+
+            df = pd.DataFrame(summary_data)
+
+            # Add emoji indicators
+            def add_indicators(df):
+                df = df.copy()
+                if df.at[0, "Credit Score"] >= 700:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ✅"
+                elif df.at[0, "Credit Score"] >= 600:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ⚠️"
+                else:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ❌"
+
+                dti = float(str(df.at[0, "Debt-to-Income Ratio (%)"]).split()[0])
+                if dti <= 30:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ✅"
+                elif dti <= 40:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ⚠️"
+                else:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ❌"
+
+                net_worth = float(str(df.at[0, "Net Worth ($)"]).split()[0])
+                if net_worth > 0:
+                    df.at[0, "Net Worth ($)"] = f"{net_worth} ✅"
+                else:
+                    df.at[0, "Net Worth ($)"] = f"{net_worth} ❌"
+
+                return df
+
+            df_with_indicators = add_indicators(df)
+
+            st.table(df_with_indicators)
 
             # Call function for calculations
             strategy = generate_investment_strategy(
@@ -224,8 +263,10 @@ def main():
                 total_liabilities,
             )
 
-            # Call function for UI
-            display_investment_strategy(strategy)
+            if total_liabilities > total_assets or dti > 0.5:
+                st.text("⚠️ High debt load — prioritize repayment before investing heavily.")
+            # else:
+            #     display_investment_strategy(strategy)
 
             # Step 3: Preferences
             st.subheader("🎯 Investment Preferences")
@@ -266,8 +307,59 @@ def main():
                 }
             }
 
+            risk_levels = ["Low", "Moderate", "High", "Very High", "Unrealistic"]
+
+            def future_value_sip(p, r, n, t):
+                return p * (((1 + r / n) ** (n * t) - 1) / (r / n)) * (1 + r / n)
+
+            def required_return(p, fv_target, n, t):
+                """Find required annual return using binary search"""
+                low, high = 0.0, 0.25  # 0% to 25% annual return
+                for _ in range(100):  # iterate for precision
+                    mid = (low + high) / 2
+                    fv = future_value_sip(p, mid, n, t)
+                    if fv < fv_target:
+                        low = mid
+                    else:
+                        high = mid
+                return mid * 100  # return in %
+
+            # risk_level = user_profile.get("riskTolerance", "Moderate")
+
+            # Map risk tolerance to color and meaning
+            risk_info = {
+                "Low": {
+                    "color": "#2ecc71",  # Green
+                    "meaning": "Prefers safety, avoids loss, very low risk acceptance"
+                },
+                "Moderate": {
+                    "color": "#f1c40f",  # Yellow
+                    "meaning": "Balanced approach, some risk acceptable for moderate growth"
+                },
+                "High": {
+                    "color": "#e67e22",  # Orange
+                    "meaning": "Comfortable with ups and downs, seeks higher returns"
+                },
+                "Very High": {
+                    "color": "#e74c3c",  # Red
+                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
+                },
+                "Unrealistic": {
+                    "color": "#8e44ad",  # Purple
+                    "meaning": "Target requires >20% annual return, not practical — adjust tenure, monthly savings, or goal"
+                }
+            }
+
+            base_risk = "Unknown"
+            risk_level = "Unknown"
+            info = {
+                "color": "#95a5a6",
+                "meaning": "Risk tolerance data not applicable"
+            }
+
             if plan_type == "Short-term":
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3 = st.columns(3)  # first row with 3 columns
+                col4, col5, col6 = st.columns(3)  # second row with 2 columns
 
                 with col1:
                     goals = st.selectbox("Goal", ["Emergency-fund", "Education", "Car", "Bike"])
@@ -297,8 +389,36 @@ def main():
                         value=float(default_values[goals]['goal_amount'])
                     )
 
+                with col5:
+
+                    # Required annual return
+                    req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+
+                    # Map to risk profile
+                    if req_return <= 7:
+                        base_risk = "Low"
+                    elif req_return <= 12:
+                        base_risk = "Moderate"
+                    elif req_return <= 16:
+                        base_risk = "High"
+                    elif req_return <= 20:
+                        base_risk = "Very High"
+                    else:
+                        base_risk = "Unrealistic"
+
+                    # Default if unknown risk level
+                    info = risk_info.get(base_risk, info)
+
+                    risk_level = st.selectbox(
+                        "Choose your Risk Level",
+                        options=risk_levels,
+                        index=risk_levels.index(base_risk)
+                    )
+
+
             elif plan_type == "Long-term":
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3 = st.columns(3)  # first row with 3 columns
+                col4, col5, col6 = st.columns(3)  # second row with 2 columns
 
                 with col1:
                     goals = st.selectbox("Goal", ["Retirement", "Home"])
@@ -325,67 +445,32 @@ def main():
                         value=float(default_long_term_values[goals]['goal_amount'])
                     )
 
-            def future_value_sip(p, r, n, t):
-                return p * (((1 + r / n) ** (n * t) - 1) / (r / n)) * (1 + r / n)
+                with col5:
 
-            def required_return(p, fv_target, n, t):
-                """Find required annual return using binary search"""
-                low, high = 0.0, 0.25  # 0% to 25% annual return
-                for _ in range(100):  # iterate for precision
-                    mid = (low + high) / 2
-                    fv = future_value_sip(p, mid, n, t)
-                    if fv < fv_target:
-                        low = mid
+                    # Required annual return
+                    req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+
+                    # Map to risk profile
+                    if req_return <= 7:
+                        base_risk = "Low"
+                    elif req_return <= 12:
+                        base_risk = "Moderate"
+                    elif req_return <= 16:
+                        base_risk = "High"
+                    elif req_return <= 20:
+                        base_risk = "Very High"
                     else:
-                        high = mid
-                return mid * 100  # return in %
+                        base_risk = "Unrealistic"
 
-            # Required annual return
-            req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+                    # Default if unknown risk level
+                    info = risk_info.get(base_risk, info)
 
-            # Map to risk profile
-            if req_return <= 7:
-                risk_level = "Low"
-            elif req_return <= 12:
-                risk_level = "Moderate"
-            elif req_return <= 16:
-                risk_level = "High"
-            elif req_return <= 20:
-                risk_level = "Very High"
-            else:
-                risk_level = "Unrealistic"
+                    risk_level = st.selectbox(
+                        "Choose your Risk Level",
+                        options=risk_levels,
+                        index=risk_levels.index(base_risk)
+                    )
 
-            # risk_level = user_profile.get("riskTolerance", "Moderate")
-
-            # Map risk tolerance to color and meaning
-            risk_info = {
-                "Low": {
-                    "color": "#2ecc71",  # Green
-                    "meaning": "Prefers safety, avoids loss, very low risk acceptance"
-                },
-                "Moderate": {
-                    "color": "#f1c40f",  # Yellow
-                    "meaning": "Balanced approach, some risk acceptable for moderate growth"
-                },
-                "High": {
-                    "color": "#e67e22",  # Orange
-                    "meaning": "Comfortable with ups and downs, seeks higher returns"
-                },
-                "Very High": {
-                    "color": "#e74c3c",  # Red
-                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
-                },
-                "Unrealistic": {
-                    "color": "#8e44ad",  # Purple
-                    "meaning": "Target requires >20% annual return, not practical — adjust tenure, monthly savings, or goal"
-                }
-            }
-
-            # Default if unknown risk level
-            info = risk_info.get(risk_level, {
-                "color": "#95a5a6",
-                "meaning": "Risk tolerance data not applicable"
-            })
 
             st.markdown(
                 f"""
@@ -397,7 +482,7 @@ def main():
                     font-size: 1.1em;
                     color: white;
                     line-height: 1.4;">
-                    📌 Risk Tolerance Level (based on profile): <strong>{risk_level} - ({info['meaning']})</strong><br>
+                    📌 Risk Tolerance Level (based on profile): <strong>{base_risk} - ({info['meaning']})</strong><br>
                 </div>
                 </br>
                 """,
