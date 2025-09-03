@@ -149,29 +149,18 @@ Show **two scenarios**:
    - Calculate the required monthly contribution to reach the goal in the given tenure.  
    - Show a single row for this case.  
 
-2. **With Provided Contribution (₹{monthly_contribution})**  
-   - For each investment option from {investment_options}, calculate how many years it would take to achieve ₹{goal_amount} with the provided contribution.  
-   - Do not restrict to {tenure} years. Instead, find the  duration (more than {tenure}) at which the future value meets or exceeds the goal.  
-   - If the goal cannot be achieved even in 30 years, then mark as "Not achievable".  
-
 Format both scenarios into tables.
 
 **Scenario 1: Required for {tenure} Years Goal**
 
-| Monthly Contribution (₹) | Estimated Value (₹) | Duration (Years) | Return Assumption | Action Needed |
-|---------------------------|---------------------|------------------|-------------------|---------------|
-| <calculated amount>       | <future value>      | {tenure}         | <return rate>     | <suggestions> |
+| Monthly Contribution (₹) | Estimated Value (₹) | Duration (Years) | Return Assumption | 
+|---------------------------|---------------------|------------------|-------------------|
+| <calculated amount>       | <future value>      | {tenure}         | <return rate>     | 
 
 ---
 
 **Scenario 2: With Provided Contribution (₹{monthly_contribution})**
-- **Important:** If the goal is achieved in any investment option, stop the table there and do not display the remaining options.
-
-| Investment Option | Return Assumption | Duration to Reach Goal (Years) | Estimated Value at Goal (₹) | Action Needed |
-|-------------------|-------------------|--------------------------------|-----------------------------|---------------|
-| <option 1>        | <range>           | <calculated years or "–">      | <goal or value>             | <suggestions> |
-| <option 2>        | <range>           | <calculated years or "–">      | <goal or value>             | <suggestions> |
-... continue for all {investment_options}
+ {goal_duration}
 
 ---
 

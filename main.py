@@ -9,6 +9,8 @@ from langchain_openai import ChatOpenAI
 from controllers.agent_controller import create_agent_executor, create_investment_summary
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
 from controllers.flow import get_dynamic_allocation, format_allocation_table
+from controllers.investment_summary import generate_investment_strategy, display_investment_strategy, \
+    calculate_goal_duration
 from controllers.newsAPI_controller import get_stock_news
 from langchain.schema import AIMessage, HumanMessage
 import time
@@ -83,10 +85,10 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Fitness Wellness", "Goal based"],
-            icons=["clipboard-data", "graph-up-arrow", "heart-pulse-fill", "graph-up-arrow"],
+            options=["Stock News", "Financial Advisor"],
+            icons=["clipboard-data", "graph-up-arrow"],
             menu_icon="cast",
-            default_index=3,
+            default_index=1,
         )
 
     st.sidebar.markdown("---")
@@ -104,7 +106,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-    if mode == "Financial Advisor":
+    if mode == "Financial":
         st.title("💼 Financial Advisor")
 
         if "chat_history" not in st.session_state:
@@ -179,14 +181,14 @@ def main():
             st.session_state.chat_history_wellness.append((user_input, response))
 
     # Dummy function placeholder for your AI agent
-    if mode == "Goal based":
+    if mode == "Financial Advisor":
 
         # Load user data
         with open("data/customer.json") as f:
             all_user_data = json.load(f)
 
         st.set_page_config(page_title="Investment Planner", layout="wide")
-        st.title("📊 Personalized Investment Planning")
+        st.title("📊 Personalized Financial Wellness & Investment Advisory Platform")
 
         # Step 1: Ask for name
         user_name = st.text_input("Enter your name to begin:")
@@ -212,6 +214,17 @@ def main():
                 "Total Liabilities ($)": total_liabilities,
             }
             st.table(pd.DataFrame(summary_data))
+
+            # Call function for calculations
+            strategy = generate_investment_strategy(
+                employment["monthlyIncomeAmount"],
+                employment["creditScore"],
+                sum(a["total"] for a in assets),
+                total_liabilities,
+            )
+
+            # Call function for UI
+            display_investment_strategy(strategy)
 
             # Step 3: Preferences
             st.subheader("🎯 Investment Preferences")
@@ -336,7 +349,8 @@ def main():
             """
             allocation = get_dynamic_allocation(risk_level, monthly_contribution)
             formatted_table = format_allocation_table(allocation, monthly_contribution)
-
+            goal_duration = calculate_goal_duration(monthly_contribution,goal_amount)
+            print(goal_duration)
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
                 "tenure": str(tenure),
@@ -344,6 +358,7 @@ def main():
                 "risk_tolerance": str(risk_level),
                 "investment_options": investment_options,
                 "formatted_allocation_table": formatted_table,
+                "goal_duration":goal_duration,
             }
 
             # Step 4: Generate Plan
