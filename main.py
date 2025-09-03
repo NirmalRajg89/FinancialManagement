@@ -325,28 +325,66 @@ def main():
                         value=float(default_long_term_values[goals]['goal_amount'])
                     )
 
-            risk_level = user_profile.get("riskTolerance", "Moderate")
+            def future_value_sip(p, r, n, t):
+                return p * (((1 + r / n) ** (n * t) - 1) / (r / n)) * (1 + r / n)
+
+            def required_return(p, fv_target, n, t):
+                """Find required annual return using binary search"""
+                low, high = 0.0, 0.25  # 0% to 25% annual return
+                for _ in range(100):  # iterate for precision
+                    mid = (low + high) / 2
+                    fv = future_value_sip(p, mid, n, t)
+                    if fv < fv_target:
+                        low = mid
+                    else:
+                        high = mid
+                return mid * 100  # return in %
+
+            # Required annual return
+            req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+
+            # Map to risk profile
+            if req_return <= 7:
+                risk_level = "Low"
+            elif req_return <= 12:
+                risk_level = "Moderate"
+            elif req_return <= 16:
+                risk_level = "High"
+            elif req_return <= 20:
+                risk_level = "Very High"
+            else:
+                risk_level = "Unrealistic"
+
+            # risk_level = user_profile.get("riskTolerance", "Moderate")
 
             # Map risk tolerance to color and meaning
             risk_info = {
                 "Low": {
-                    "color": "#e74c3c",  # Green
-                    "meaning": "Prefers safety, avoids loss, low risk acceptance"
+                    "color": "#2ecc71",  # Green
+                    "meaning": "Prefers safety, avoids loss, very low risk acceptance"
                 },
                 "Moderate": {
                     "color": "#f1c40f",  # Yellow
-                    "meaning": "Balanced approach, some risk acceptable"
+                    "meaning": "Balanced approach, some risk acceptable for moderate growth"
                 },
                 "High": {
-                    "color": "#2ecc71",  # Red
-                    "meaning": "Comfortable with big ups and downs, seeks high returns"
+                    "color": "#e67e22",  # Orange
+                    "meaning": "Comfortable with ups and downs, seeks higher returns"
+                },
+                "Very High": {
+                    "color": "#e74c3c",  # Red
+                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
+                },
+                "Unrealistic": {
+                    "color": "#8e44ad",  # Purple
+                    "meaning": "Target requires >20% annual return, not practical — adjust tenure, monthly savings, or goal"
                 }
             }
 
             # Default if unknown risk level
             info = risk_info.get(risk_level, {
                 "color": "#95a5a6",
-                "meaning": "Risk tolerance data not available"
+                "meaning": "Risk tolerance data not applicable"
             })
 
             st.markdown(
