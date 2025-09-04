@@ -201,7 +201,7 @@ def main():
 
     # Dummy function placeholder for your AI agent
     elif mode == "Financial Advisor":
-
+        import pandas as pd
         # Load user data
         with open("data/customer.json") as f:
             all_user_data = json.load(f)
