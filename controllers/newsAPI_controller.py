@@ -3,7 +3,7 @@ from datetime import datetime
 import streamlit as st
 import requests
 
-API_KEY = 'd4a44082cfa14bf7b8a95de96aefbcec'
+API_KEY = 'a9d2d7605e0b4f96b4f06e3ac61cf3b7'
 BASE_URL = 'https://newsapi.org/v2/everything'
 
 @st.cache_data(ttl=5)
