@@ -275,6 +275,72 @@ def main():
 
             st.table(df_with_indicators)
 
+            def calculate_risk_tolerance(profile: dict) -> str:
+                """Derive risk tolerance from credit score, income, liabilities, and assets."""
+
+                emp = profile.get("employment", {})
+                credit = emp.get("creditScore", 600)
+                income = emp.get("monthlyIncomeAmount", 0)
+
+                # liabilities: sum monthly payments
+                liabilities = profile.get("liabilities", [])
+                monthly_debt = sum(l.get("monthlyPaymentAmount", 0) for l in liabilities)
+
+                # assets: sum liquid totals
+                assets = profile.get("assets", [])
+                liquid_assets = sum(a.get("total", 0) for a in assets)
+
+                # ratios
+                dti = monthly_debt / income if income else 1
+                months_of_cushion = liquid_assets / income if income else 0
+
+                # base level from credit
+                if credit < 600:
+                    level = 1  # Low
+                elif 600 <= credit <= 720:
+                    level = 2  # Moderate
+                else:
+                    level = 3  # High
+
+                # adjust by cushion
+                if months_of_cushion < 3:
+                    level = max(1, level - 1)
+                elif months_of_cushion > 12:
+                    level = min(3, level + 1)
+
+                # adjust by DTI
+                if dti > 0.4:
+                    level = max(1, level - 1)
+
+                return {1: "Low", 2: "Moderate", 3: "High"}[level]
+
+            risk_tolerance = calculate_risk_tolerance(user_profile)
+
+            if risk_tolerance == "Low":
+                st.markdown(
+                    f"""
+                    ### 🟢 Suggested Risk Tolerance: **{risk_tolerance}**
+                    - You prefer safer investments with minimal volatility.  
+                    - Focus on **capital protection** and stable returns.  
+                    """
+                )
+            elif risk_tolerance == "Moderate":
+                st.markdown(
+                    f"""
+                    ### 🟡 Suggested Risk Tolerance: **{risk_tolerance}**
+                    - You are open to **balanced growth** with some risk.  
+                    - Diversified mix of equity and fixed income is recommended.  
+                    """
+                )
+            else:  # High
+                st.markdown(
+                    f"""
+                    ### 🔴 Suggested Risk Tolerance: **{risk_tolerance}**
+                    - You are comfortable with **higher volatility** for potentially higher rewards.  
+                    - Consider aggressive growth strategies with equity focus.  
+                    """
+                )
+
             # Call function for calculations
             strategy = generate_investment_strategy(
                 employment["monthlyIncomeAmount"],
