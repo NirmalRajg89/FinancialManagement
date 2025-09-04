@@ -7,7 +7,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
-from controllers.agent_controller import create_agent_executor, create_investment_summary
+from controllers.agent_controller import create_agent_executor, create_investment_summary, create_loan_summary
 from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
 from controllers.flow import get_dynamic_allocation, format_allocation_table
 from controllers.investment_summary import generate_investment_strategy, display_investment_strategy, \
@@ -138,8 +138,8 @@ def main():
     with st.sidebar:
         mode = option_menu(
             menu_title="Menu",
-            options=["Stock News", "Financial Advisor", "Financial"],
-            icons=["clipboard-data", "graph-up-arrow", "graph-up-arrow"],
+            options=["Stock News", "Financial Advisor"],
+            icons=["clipboard-data", "graph-up-arrow"],
             menu_icon="cast",
             default_index=1,
         )
@@ -159,48 +159,48 @@ def main():
             unsafe_allow_html=True,
         )
 
-    if mode == "Financial":
-        st.title("💼 Financial")
-
-        if "chat_history" not in st.session_state:
-            st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
-
-        # Display chat history
-        for message in st.session_state.chat_history:
-            role = "assistant" if isinstance(message, AIMessage) else "user"
-            with st.chat_message(role):
-                st.markdown(message.content)
-
-        # Get user input
-        user_query = st.chat_input("Your message")
-
-        if user_query:
-            human_msg = HumanMessage(content=user_query)
-            st.session_state.chat_history.append(human_msg)
-
-            with st.chat_message("user"):
-                st.markdown(user_query)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Getting expert advice......"):
-                    response = app.invoke({"question": user_query})
-                    print(response)
-                    output = response.get("answer", "Sorry, something went wrong.")
-
-                ai_msg = AIMessage(content=output)
-                st.session_state.chat_history.append(ai_msg)
-
-                output_placeholder = st.empty()
-                full_response = ""
-                for char in output:
-                    full_response += char
-                    output_placeholder.markdown(full_response + "▌")
-                    time.sleep(0.01)
-
-                output_placeholder.markdown(full_response)
+    # if mode == "Financial":
+    #     st.title("💼 Financial")
+    #
+    #     if "chat_history" not in st.session_state:
+    #         st.session_state.chat_history = [AIMessage(content="Hello! How can I help you today?")]
+    #
+    #     # Display chat history
+    #     for message in st.session_state.chat_history:
+    #         role = "assistant" if isinstance(message, AIMessage) else "user"
+    #         with st.chat_message(role):
+    #             st.markdown(message.content)
+    #
+    #     # Get user input
+    #     user_query = st.chat_input("Your message")
+    #
+    #     if user_query:
+    #         human_msg = HumanMessage(content=user_query)
+    #         st.session_state.chat_history.append(human_msg)
+    #
+    #         with st.chat_message("user"):
+    #             st.markdown(user_query)
+    #
+    #         with st.chat_message("assistant"):
+    #             with st.spinner("Getting expert advice......"):
+    #                 response = app.invoke({"question": user_query})
+    #                 print(response)
+    #                 output = response.get("answer", "Sorry, something went wrong.")
+    #
+    #             ai_msg = AIMessage(content=output)
+    #             st.session_state.chat_history.append(ai_msg)
+    #
+    #             output_placeholder = st.empty()
+    #             full_response = ""
+    #             for char in output:
+    #                 full_response += char
+    #                 output_placeholder.markdown(full_response + "▌")
+    #                 time.sleep(0.01)
+    #
+    #             output_placeholder.markdown(full_response)
 
     # Dummy function placeholder for your AI agent
-    elif mode == "Financial Advisor":
+    if mode == "Financial Advisor":
 
         # Load user data
         with open("data/customer.json") as f:
@@ -228,6 +228,7 @@ def main():
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
             total_assets = sum(a["total"] for a in assets)
             dti = monthlyPaymentAmount / user_profile["employment"]["monthlyIncomeAmount"]
+            cash_reserves = sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])
 
             summary_data = {
                 "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
@@ -384,7 +385,7 @@ def main():
                     goals = st.selectbox("Goal", ["Emergency-fund", "Education", "Car", "Bike"])
 
                 with col2:
-                    tenure = st.number_input("Duration(in months)", min_value=6, max_value=60, value=default_values[goals]['tenure'], step=1) * 1/12
+                    tenure = st.number_input("Duration(in months)", min_value=6, max_value=60, value=default_values[goals]['tenure'], step=1)
 
                 with col3:
                     # Calculate default contribution as percentage of disposable income
@@ -443,7 +444,7 @@ def main():
                     goals = st.selectbox("Goal", ["Retirement", "Home"])
 
                 with col2:
-                    tenure = st.number_input("Duration(in years)", min_value=7, max_value=30, value=default_long_term_values[goals]['tenure'], step=1)
+                    tenure = st.number_input("Duration(in years)", min_value=5, max_value=30, value=default_long_term_values[goals]['tenure'], step=1)
 
                 with col3:
                     default_contribution = round(disposable_income * income_risk_tolerance, 2)
@@ -526,7 +527,7 @@ def main():
             print(goal_duration)
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
-                "tenure": str(tenure),
+                "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
                 "goal_amount": str(goal_amount),
                 "risk_tolerance": str(risk_level),
                 "investment_options": investment_options,
@@ -545,7 +546,7 @@ def main():
                                 "plan_type": plan_type,
                                 "goals": goals,
                                 "risk_tolerance": risk_level.lower(),
-                                "tenure": tenure,
+                                "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
                                 "monthly_contribution": monthly_contribution,
                                 "goal_amount": goal_amount
 
@@ -557,7 +558,7 @@ def main():
                         plan_prompt = {
                             "profile": user_profile,
                             "user_inputs": st.session_state.investment_input_data["user_inputs"],
-                            "tenure": tenure,
+                            "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
                             "monthly_contribution": monthly_contribution,
                             "goal_amount": goal_amount,
                             "risk_tolerance": risk_level,
@@ -565,17 +566,23 @@ def main():
                             "question": "Generate a detailed investment plan based on the above."
                         }
 
-                        user_msg = f"Generate {plan_type} plan — goals: {goals}, risk: {risk_level}, tenure: {tenure}, contribution: {monthly_contribution}, Goal to achieve: {goal_amount}"
+                        user_msg = f"Generate {plan_type} plan — goals: {goals}, risk: {risk_level}, tenure: {tenure} {'months' if plan_type == 'Short-term' else 'years'}, contribution: {monthly_contribution}, Goal to achieve: {goal_amount}"
                         st.session_state.chat_history.append({"role": "user", "content": user_msg})
 
                         full_response = ""
                         response = st.session_state.agent.ask(plan_prompt)
 
                         response_placeholder = st.empty()
+
                         for char in response:
                             full_response += char
                             response_placeholder.markdown(full_response + "▌")
                             time.sleep(0.001)
+
+                        # Add loan recommendation if needed
+                        if req_return and plan_type == "Long-term":
+                            loan_summary = create_loan_summary(goal_amount, cash_reserves, tenure, req_return)
+                            full_response += "\n\n" + loan_summary
 
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
@@ -927,7 +934,6 @@ def main():
                             })
                         
                         if related_data:
-                            import pandas as pd
                             df_related = pd.DataFrame(related_data)
                             st.dataframe(df_related, use_container_width=True, hide_index=True)
             

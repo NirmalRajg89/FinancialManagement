@@ -10,6 +10,7 @@ from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+from controllers.loan_alternatives import should_offer_loans, suggest_loans
 from models.tools import (
     get_stock_list,
     get_stock_price,
@@ -40,6 +41,7 @@ class InvestmentAgent:
         result = self.executor.invoke({"question": question})
         return result["output"] if "output" in result else result
 
+
 def create_agent_executor(static_vars: dict):
     load_env()
 
@@ -65,27 +67,89 @@ def create_agent_executor(static_vars: dict):
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
-         "You are a financial assistant. When returning comparisons or structured data, format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
-        MessagesPlaceholder(variable_name="chat_history", optional=True),
+         "You are a financial assistant. When returning comparisons or structured data, "
+         "format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
+        MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{question}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    # 🔒 Bind your dynamic values here so the agent doesn't expect them later
-    prompt = prompt.partial(**static_vars)
-
-    agent = create_openai_tools_agent(llm=llm, tools=tools, prompt=prompt)
-
-    executor = AgentExecutor(
-        agent=agent,
+    agent = create_openai_tools_agent(
+        llm=llm,
         tools=tools,
+        prompt=prompt,
         memory=memory,
-        verbose=True,
-        return_intermediate_steps=False
     )
 
+    executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
     return InvestmentAgent(executor)
 
+
+# # 🔹 Helper to enrich static_vars with loan suggestions
+# def enrich_with_loans(static_vars: dict,
+#                       goal_amount: float,
+#                       current_savings: float,
+#                       tenure_years: float,
+#                       required_return: float) -> dict:
+#     """Augments static_vars with loan_suggestions if risk > moderate."""
+#     if should_offer_loans(required_return):
+#         loan_payload = suggest_loans(
+#             goal_amount=goal_amount,
+#             current_savings=current_savings,
+#             time_horizon_years=tenure_years,
+#             required_return=required_return,
+#         )
+#         static_vars["loan_suggestions"] = loan_payload["loan_rows"]
+#         static_vars["loan_disclaimer"] = loan_payload["disclaimer"]
+#     else:
+#         static_vars["loan_suggestions"] = []
+#         static_vars["loan_disclaimer"] = "Not applicable (risk within acceptable range)."
+#     return static_vars
+
+
+# --- Loan Summary Formatter (text style like create_investment_summary) ---
+def create_loan_summary(goal_amount: float,
+                        current_savings: float,
+                        tenure_years: float,
+                        required_return: any) -> str:
+    """Generate a human-readable loan recommendation summary (text format)."""
+    if not should_offer_loans(required_return):
+        return "No loan recommendation needed — your required return is within moderate risk levels."
+
+    loan_payload = suggest_loans(
+        goal_amount=goal_amount,
+        current_savings=current_savings,
+        time_horizon_years=tenure_years,
+        required_return=required_return,
+    )
+
+    lines = []
+    lines.append("### 📌 Loan Alternatives")
+    lines.append(
+        f"Your goal requires ~{required_return:.1f}% annual return, "
+        "which is **above moderate risk**. A loan could reduce investment risk."
+    )
+    lines.append(f"Funding gap today: ${loan_payload['outstanding_needed_today']:,}")
+    lines.append(f"Time horizon: {loan_payload['time_horizon_months']} months")
+    lines.append("")
+    lines.append("**Available Loan Options:**")
+
+    for row in loan_payload["loan_rows"]:
+        lines.append(
+            f"- {row['Product']} ({row['Rate Range (p.a.)']}, "
+            f"Est. Payment: ${row['Estimated Payment']}/mo) — {row['Notes']}"
+        )
+
+    # Add contextual advice if present
+    if "advice" in loan_payload and loan_payload["advice"]:
+        lines.append("")
+        lines.append("**Additional Advice:**")
+        for tip in loan_payload["advice"]:
+            lines.append(f"- {tip}")
+
+    lines.append("")
+    lines.append(f"_{loan_payload['disclaimer']}_")
+
+    return "\n".join(lines)
 
 
 def create_investment_summary(static_vars: dict):
@@ -123,37 +187,36 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 -------
 ### OUTPUT SECTIONS
 ### 1. Investment Options Analysis
-- Use the given monthly contribution (₹{monthly_contribution}) and tenure ({tenure} years) to calculate the future value under each return range.
+- Use the given monthly contribution (₹{monthly_contribution}) and tenure ({tenure}) to calculate the future value under each return range.
 - For each investment option, show:
   * Expected Return (%)
-  * Future Value at {tenure} Years (($))
+  * Future Value at {tenure} (($))
   * Achieved Target? (Yes/No/Maybe, based on comparison with ₹{goal_amount})
   * Suggestions if Target is Not Met
 - **Important:** 
-    * If the goal is achieved (Achieved Target? = Yes) for any investment option, stop the table there (i.e., don’t display further options).
-    * Also, skip Section 2 entirely and run section 3 — no need to show alternative scenarios
+    * If the goal is achieved (Achieved Target? = Yes) for any investment option, stop the table there (i.e., don’t display further options) and skip Section 2 entirely and run section 3 — no need to show alternative scenarios
 
 The investment options to consider are:
 {investment_options}
 
 Table format:
-| Investment Option | Expected Return (%) | Future Value at {tenure} Years ($) | Achieved Target? | Suggestions if Target is Not Met |
+| Investment Option | Expected Return (%) | Future Value at {tenure} ($) | Achieved Target? | Suggestions if Target is Not Met |
 |-------------------|---------------------|-------------------------------------|------------------|----------------------------------|
 | <option>          | <range>             | <value>                             | Yes/No/Maybe     | <suggestions> |
 
 ---
-### 2. To Reach ₹{goal_amount} in {tenure} Years
+### 2. To Reach ₹{goal_amount} in {tenure}
 Show **two scenarios**:
 
-1. **Required for {tenure} Years Goal**  
+1. **Required for {tenure} Goal**  
    - Calculate the required monthly contribution to reach the goal in the given tenure.  
    - Show a single row for this case.  
 
 Format both scenarios into tables.
 
-**Scenario 1: Required for {tenure} Years Goal**
+**Scenario 1: Required for {tenure} Goal**
 
-| Monthly Contribution (₹) | Estimated Value (₹) | Duration (Years) | Return Assumption | 
+| Monthly Contribution (₹) | Estimated Value (₹) | Duration  | Return Assumption | 
 |---------------------------|---------------------|------------------|-------------------|
 | <calculated amount>       | <future value>      | {tenure}         | <return rate>     | 
 
