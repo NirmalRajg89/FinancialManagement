@@ -178,8 +178,8 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 ### RULES
 - Perform all calculations internally. Never explain formulas or steps.
 - Output must be in Markdown tables only.
-- Always format numbers in Indian numbering style with commas.
-- Prefix all monetary values with ₹.
+- Always format numbers in US numbering style with commas.
+- Prefix all monetary values with $.
 - Always show percentages with the % symbol.
 - In Suggestions column, show each recommendation on a new line using line breaks (- item 1 - item 2).
 - Never leave numbers in raw form.
@@ -187,11 +187,11 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 -------
 ### OUTPUT SECTIONS
 ### 1. Investment Options Analysis
-- Use the given monthly contribution (₹{monthly_contribution}) and tenure ({tenure}) to calculate the future value under each return range.
+- Use the given monthly contribution (${monthly_contribution}) and tenure ({tenure}) to calculate the future value under each return range.
 - For each investment option, show:
   * Expected Return (%)
   * Future Value at {tenure} (($))
-  * Achieved Target? (Yes/No/Maybe, based on comparison with ₹{goal_amount})
+  * Achieved Target? (Yes/No/Maybe, based on comparison with ${goal_amount})
   * Suggestions if Target is Not Met
 - **Important:** 
     * If the goal is achieved (Achieved Target? = Yes) for any investment option, stop the table there (i.e., don’t display further options) and skip Section 2 entirely and run section 3 — no need to show alternative scenarios
@@ -205,7 +205,7 @@ Table format:
 | <option>          | <range>             | <value>                             | Yes/No/Maybe     | <suggestions> |
 
 ---
-### 2. To Reach ₹{goal_amount} in {tenure}
+### 2. To Reach ${goal_amount} in {tenure}
 Show **two scenarios**:
 
 1. **Required for {tenure} Goal**  
@@ -216,13 +216,13 @@ Format both scenarios into tables.
 
 **Scenario 1: Required for {tenure} Goal**
 
-| Monthly Contribution (₹) | Estimated Value (₹) | Duration  | Return Assumption | 
+| Monthly Contribution ($) | Estimated Value ($) | Duration  | Return Assumption | 
 |---------------------------|---------------------|------------------|-------------------|
 | <calculated amount>       | <future value>      | {tenure}         | <return rate>     | 
 
 ---
 
-**Scenario 2: With Provided Contribution (₹{monthly_contribution})**
+**Scenario 2: With Provided Contribution (${monthly_contribution})**
  {goal_duration}
 
 ---

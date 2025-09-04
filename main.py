@@ -502,7 +502,7 @@ def main():
                     font-size: 1.1em;
                     color: white;
                     line-height: 1.4;">
-                    📌 Risk Tolerance Level (based on profile): <strong>{base_risk} - ({info['meaning']})</strong><br>
+                    📌 Suggested Risk Level as per Goal inputs: <strong>{base_risk} - ({info['meaning']})</strong><br>
                 </div>
                 </br>
                 """,

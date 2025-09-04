@@ -126,7 +126,7 @@ def format_allocation_table(allocation: dict, monthly_contribution: int) -> str:
     }
 
     def format_inr(value):
-        return f"₹{value:,.0f}"
+        return f"${value:,.0f}"
 
     table = f"""
 | Market Cap Segment | Suggested Allocation (%) | Amount Range ($) | Investment Style           | Example Stocks/ETFs               |
