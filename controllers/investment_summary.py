@@ -100,3 +100,107 @@ def calculate_goal_duration(monthly_contribution, goal_amount):
     # Convert to DataFrame for nice table format
     df = pd.DataFrame(results)
     return df
+
+
+
+
+def calculate_monthly_contribution(goal_amount, duration_months):
+    """
+    Calculate monthly contribution, principal invested, total interest earned,
+    and maturity amount for different investment return assumptions.
+    """
+
+    results = []
+
+    options = [
+        ("Bank Savings Account", (3, 4)),
+        ("Recurring Deposit", (5, 7)),
+        ("Public Provident Fund", (7, 8)),
+        ("Equity Mutual Funds", (8, 12)),
+        ("Index Funds", (10, 15)),
+        ("Stock Market", (15, 20))
+    ]
+
+    for name, (low, high) in options:
+        avg_return = (low + high) / 2
+        annual_rate = avg_return / 100
+        monthly_rate = annual_rate / 12
+
+        # Required monthly contribution to reach goal
+        if monthly_rate > 0:
+            monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
+        else:
+            monthly_contribution = goal_amount / duration_months
+
+        # Calculate maturity amount using compound interest
+        future_value = monthly_contribution * ((1 + monthly_rate) ** duration_months - 1) / monthly_rate
+
+        # Calculate principal and interest separately
+        principal_invested = monthly_contribution * duration_months
+        total_interest = future_value - principal_invested
+
+        results.append({
+            "Investment Option": name,
+            "Return Assumption": f"{low}–{high}%",
+            "Monthly Contribution": round(monthly_contribution, 2),
+            "Principal (Monthly × Months)": round(principal_invested, 2),
+            "Total Interest Earned": round(total_interest, 2),
+            "Total Maturity Amount": round(principal_invested + total_interest, 2)
+        })
+
+    df = pd.DataFrame(results)
+    return df
+
+
+
+def calculate_monthly_contribution(goal_amount, duration_months):
+    """Core calculation logic for monthly contribution and maturity."""
+    results = []
+    options = [
+        ("Bank Savings Account", (3, 4)),
+        ("Recurring Deposit", (5, 7)),
+        ("Public Provident Fund", (7, 8)),
+        ("Equity Mutual Funds", (8, 12)),
+        ("Index Funds", (10, 15)),
+        ("Stock Market", (15, 20))
+    ]
+
+    for name, (low, high) in options:
+        avg_return = (low + high) / 2
+        monthly_rate = (avg_return / 100) / 12
+
+        monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
+        future_value = monthly_contribution * ((1 + monthly_rate) ** duration_months - 1) / monthly_rate
+        principal = monthly_contribution * duration_months
+        interest = future_value - principal
+
+        results.append({
+            "Investment Option": name,
+            "Return Assumption": f"{low}–{high}%",
+            "Monthly Contribution": round(monthly_contribution, 2),
+            "Principal (Monthly × Months)": round(principal, 2),
+            "Total Interest Earned": round(interest, 2),
+            "Total Maturity Amount": round(future_value, 2)
+        })
+
+    return pd.DataFrame(results)
+
+def calculate_risk_tolerance_v1(customer_data: dict) -> str:
+    """
+    Core logic for risk tolerance classification.
+    Parameters are passed directly from outside.
+    """
+    credit_score = customer_data["credit_score"]
+    monthly_salary = customer_data["monthly_salary"]
+    monthly_debt = customer_data["monthly_debt"]
+    savings_amount = customer_data["savings_amount"]
+    debt_ratio = (monthly_debt / monthly_salary) * 100 if monthly_salary > 0 else 0
+
+    if credit_score > 700 and debt_ratio < 40 and savings_amount > 0:
+        risk_level = "High"
+    elif 650 <= credit_score <= 700 and 40 <= debt_ratio <= 70:
+        risk_level = "Moderate"
+    else:
+        risk_level = "Low"
+
+    return risk_level

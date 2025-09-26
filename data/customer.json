@@ -18,7 +18,7 @@
       "positionDescription": "Software Engineer",
       "basePayAmount": 8333.33,
       "unitType": "Office",
-      "monthlyIncomeAmount": 8333,
+      "monthlyIncomeAmount": 8500,
       "owner": "Borrower",
       "titlePhone": "555-123-4567",
       "creditScore": 745
@@ -44,23 +44,26 @@
     ],
     "liabilities": [
       {
-        "volIndex": 6,
-        "accountIdentifier": "411711911",
-        "liabilityIndex": 8,
-        "payoffStatusIndicator": false,
-        "payoffIncludedIndicator": false,
-        "accountIndicator": true,
-        "noLinkToDocTrackIndicator": true,
-        "uCDPayoffType": "",
-        "creditLimit": 5000,
-        "monthlyPaymentAmount": 100,
-        "nameInAccount": "John Smith",
-        "includeTaxesAndInsuranceIndicator": false,
-        "requestId": "a7b1c1d1-1111-4f33-9aaa-1c2c2e2e2e2e",
-        "unpaidBalanceAmount": 1800,
-        "id": "Liability/8",
+        "name": "Home loan",
+        "monthlyPaymentAmount": 2000,
+        "termMonths": 250,
+        "liabilityType": "Mortgage",
+        "unpaidBalanceAmount": 415000,
+        "owner": "Borrower"
+      },
+      {
+        "name": "car loan",
+        "monthlyPaymentAmount": 500,
+        "termMonths": 60,
+        "unpaidBalanceAmount": 30000,
+        "liabilityType": "Auto Loan",
+        "owner": "Borrower"
+      },
+      {
+        "name": "Credit card",
+        "monthlyPaymentAmount": 200,
+        "unpaidBalanceAmount": 1500,
         "liabilityType": "Revolving",
-        "holderName": "VISA Credit",
         "owner": "Borrower"
       }
     ]
