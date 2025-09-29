@@ -21,6 +21,8 @@ import time
 from controllers.utils import format_tenure, add_indicators, get_tolerance, get_tolerance_v1
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from controllers.router_graph import app
+from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary, speak_welcome_message
+
 
 
 def img_to_base64(image_path):
@@ -99,68 +101,250 @@ def get_session_memory():
 
 
 def main():
-    st.set_page_config(layout="wide")
-    st.set_page_config(page_title="Financial Advisor and Wellness", page_icon="💰")
+    st.set_page_config(
+        layout="wide",
+        page_title="Financial Advisor Pro",
+        page_icon="💼",
+        initial_sidebar_state="expanded"
+    )
 
-    # Insert custom CSS for glowing effect
+    # Modern CSS styling
     st.markdown(
         """
         <style>
-        .cover-glow {
-            width: 100%;
-            height: auto;
-            padding: 3px;
-            box-shadow: 
-                0 0 5px #330000,
-                0 0 10px #660000,
-                0 0 15px #990000,
-                0 0 20px #CC0000,
-                0 0 25px #FF0000,
-                0 0 30px #FF3333,
-                0 0 35px #FF6666;
-            position: relative;
-            z-index: -1;
-            border-radius: 45px;
+        /* Import modern fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        /* Global styles */
+        .main {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Sidebar styling */
+        .css-1d391kg {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .css-1d391kg .css-1v0mbdj {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        
+        /* Logo styling */
+        .logo-container {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        .main-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .main-logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .brand-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Menu styling */
+        .menu-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        /* Footer logo */
+        .footer-logo {
+            display:flex;
+            justify-content:center;
+            width: 60px,
+            height: 100px;
+            opacity: 0.8;
+            border-radius:20px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .footer-logo:hover {
+            opacity: 1;
+        }
+        
+        /* Main content styling */
+        .main-content {
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        /* Card styling */
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Button styling */
+        .stButton > button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Input styling */
+        .stTextInput > div > div > input {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s ease;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Table styling */
+        .stDataFrame {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Hide Streamlit branding */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    # Load and display sidebar image
-    img_path = "imgs/rate_logo1.png"
-    img_base64 = img_to_base64(img_path)
-    if img_base64:
-        st.sidebar.markdown(
-            f'<img src="data:image/png;base64,{img_base64}" class="cover-glow">',
-            unsafe_allow_html=True,
-        )
-
-    st.sidebar.markdown("---")
-
+    # Modern sidebar design
     with st.sidebar:
+        # Main logo and brand
+        st.markdown(
+            """
+            <div class="logo-container">
+                <div style="display: flex; justify-content: center; align-items: center;">
+            """,
+            unsafe_allow_html=True
+        )
+        
+        img_path = "imgs/rate_logo1.png"
+        img_base64 = img_to_base64(img_path)
+        if img_base64:
+            st.markdown(
+                f'<img src="data:image/png;base64,{img_base64}" class="main-logo">',
+                unsafe_allow_html=True,
+            )
+        
+        st.markdown(
+            """
+                </div>
+                <div class="brand-text">Financial Advisor Pro</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Navigation menu
+        st.markdown('<div class="menu-container">', unsafe_allow_html=True)
         mode = option_menu(
-            menu_title="Menu",
+            menu_title=None,
             options=["Stock News", "Financial Advisor", "Financial Advisor - V1"],
-            icons=["clipboard-data", "graph-up-arrow","graph-up-arrow"],
-            menu_icon="cast",
+            icons=["clipboard-data", "graph-up-arrow", "graph-up-arrow"],
+            menu_icon=None,
             default_index=2,
+            styles={
+                "container": {"padding": "0!important", "background-color": "transparent"},
+                "icon": {"color": "white", "font-size": "16px"},
+                "nav-link": {
+                    "font-size": "14px",
+                    "text-align": "left",
+                    "margin": "5px 0",
+                    "color": "white",
+                    "background-color": "transparent",
+                    "border-radius": "8px",
+                    "padding": "10px 15px",
+                },
+                "nav-link-selected": {
+                    "background-color": "rgba(255, 255, 255, 0.2)",
+                    "color": "white",
+                },
+            }
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.sidebar.markdown("---")
-
-    # Add vertical space to push the logo to the bottom
-    st.sidebar.markdown("<div style='flex:1'></div>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)  # Adjust as needed
-
-    # Display the altimetrik logo at the bottom of the sidebar
-    img_path = "imgs/altimetrik.png"
-    img_base64 = img_to_base64(img_path)
-    if img_base64:
-        st.sidebar.markdown(
-            f'<img src="data:image/png;base64,{img_base64}">',
-            unsafe_allow_html=True,
+        # Add spacer
+        st.markdown("<div style='flex: 1;'></div>", unsafe_allow_html=True)
+        
+        # Footer with company logo
+        st.markdown(
+            """
+            <div style="text-align: center; padding: 20px 0; border-top: 1px solid rgba(255, 255, 255, 0.2);">
+                <div style="color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-bottom: 2px;">
+                    Powered by
+                </div>
+            """,
+            unsafe_allow_html=True
         )
+        
+        img_path = "imgs/alti_logo1.png"
+        img_base64 = img_to_base64(img_path)
+        if img_base64:
+            st.markdown(
+                f'<img src="data:image/png;base64,{img_base64}" class="footer-logo">',
+                unsafe_allow_html=True,
+            )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
     if mode == "Financial Advisor":
         st.session_state.search_query = ""
@@ -179,6 +363,9 @@ def main():
                 st.error(f"No data found for user: {user_name}")
                 st.stop()
 
+            # Speak welcome message automatically
+            speak_welcome_message(user_name)
+            
             user_profile = all_user_data[user_name]
 
             # Step 2: Financial summary
@@ -616,6 +803,9 @@ def main():
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
                         response_placeholder.empty()
+                        
+                        # Automatically speak investment plan summary
+                        speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
@@ -664,6 +854,9 @@ def main():
                 st.error(f"No data found for user: {user_name}")
                 st.stop()
 
+            # Speak welcome message automatically
+            speak_welcome_message(user_name)
+            
             user_profile = all_user_data[user_name]
 
             # Step 2: Financial summary
@@ -688,18 +881,36 @@ def main():
                 "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
                 "Saving - Liquid Fund ($)": [sum(a["total"] for a in assets)],
-                "Total Liabilities ($)": total_liabilities,
+                "Total Liabilities ($)": [total_liabilities],  # make it a list
                 "Monthly Debt Payments ($)": [monthlyPaymentAmount],
                 "Debt-to-Income Ratio (%)": [
-                    round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)],
-               # "Net Worth ($)": [sum(a["total"] for a in assets) - total_liabilities],
-                #"Cash Reserves ($)": [
-                #    sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])],
+                    round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
+                ],
             }
 
             df = pd.DataFrame(summary_data)
-            df_with_indicators = add_indicators(df)
+            
+            # Add emoji indicators for the current DataFrame structure
+            def add_indicators(df):
+                df = df.copy()
+                if df.at[0, "Credit Score"] >= 700:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ✅"
+                elif df.at[0, "Credit Score"] >= 600:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ⚠️"
+                else:
+                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ❌"
 
+                dti = float(str(df.at[0, "Debt-to-Income Ratio (%)"]).split()[0])
+                if dti <= 30:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ✅"
+                elif dti <= 40:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ⚠️"
+                else:
+                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ❌"
+
+                return df
+            
+            df_with_indicators = add_indicators(df)
             st.table(df_with_indicators)
             # ---- Debt Details Tooltip in Expander ---- #
 
@@ -731,6 +942,12 @@ def main():
             with col1:
                 risk_tolerance = calculate_risk_tolerance_v1(customer_data)
                 st.markdown(get_tolerance_v1(risk_tolerance,formula_df))
+                
+                # Automatically speak risk tolerance summary
+                credit_score = employment["creditScore"]
+                dti_ratio = round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
+                savings_condition = "Has savings > Emergency Fund" if total_assets > 22000 else "Emergency fund only" if total_assets > 0 else "No savings"
+                speak_risk_tolerance_summary(risk_tolerance, credit_score, dti_ratio, savings_condition)
 
             # In the second column, add the popover
             with col2:
@@ -959,6 +1176,9 @@ def main():
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
                         response_placeholder.empty()
+                        
+                        # Automatically speak investment plan summary
+                        speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
