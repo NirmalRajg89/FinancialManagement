@@ -33,7 +33,7 @@
         "noLinkToDocTrackIndicator": true,
         "urla2020CashOrMarketValueAmount": 15000,
         "assetType": "CheckingAccount",
-        "total": 15000,
+        "total": 15000.0,
         "isVod": true,
         "id": "Asset/18",
         "assetIndex": 18,
