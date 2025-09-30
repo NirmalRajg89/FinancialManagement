@@ -18,7 +18,7 @@ from controllers.beginner_friendly_controller import get_simple_stock_data, get_
 from langchain.schema import AIMessage, HumanMessage
 import time
 
-from controllers.utils import format_tenure, add_indicators, get_tolerance, get_tolerance_v1
+from controllers.utils import format_tenure, get_tolerance_v1, add_indicators
 from controllers.wellness_controller import get_wellness_response, extract_youtube_links
 from controllers.router_graph import app
 from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary, speak_welcome_message
@@ -393,32 +393,6 @@ def main():
             }
 
             df = pd.DataFrame(summary_data)
-
-            # Add emoji indicators
-            def add_indicators(df):
-                df = df.copy()
-                if df.at[0, "Credit Score"] >= 700:
-                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ✅"
-                elif df.at[0, "Credit Score"] >= 600:
-                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ⚠️"
-                else:
-                    df.at[0, "Credit Score"] = f"{df.at[0, 'Credit Score']} ❌"
-
-                dti = float(str(df.at[0, "Debt-to-Income Ratio (%)"]).split()[0])
-                if dti <= 30:
-                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ✅"
-                elif dti <= 40:
-                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ⚠️"
-                else:
-                    df.at[0, "Debt-to-Income Ratio (%)"] = f"{dti}% ❌"
-
-                net_worth = float(str(df.at[0, "Net Worth ($)"]).split()[0])
-                if net_worth > 0:
-                    df.at[0, "Net Worth ($)"] = f"{net_worth} ✅"
-                else:
-                    df.at[0, "Net Worth ($)"] = f"{net_worth} ❌"
-
-                return df
 
             df_with_indicators = add_indicators(df)
 
@@ -873,15 +847,17 @@ def main():
 
             monthlyPaymentAmount = sum(l["monthlyPaymentAmount"] for l in liabilities)
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
+            savings = [sum(a["total"] for a in assets)]
             total_assets = sum(a["total"] for a in assets)
             dti = monthlyPaymentAmount / user_profile["employment"]["monthlyIncomeAmount"]
             cash_reserves = sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])
-
+            Debt_to_Income_Ratio = round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
             summary_data = {
                 "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
-                "Saving - Liquid Fund ($)": [sum(a["total"] for a in assets)],
-                "Total Liabilities ($)": [total_liabilities],  # make it a list
+              
+                "Saving - Liquid Fund ($)": savings,
+                "Total Liabilities ($)": total_liabilities,
                 "Monthly Debt Payments ($)": [monthlyPaymentAmount],
                 "Debt-to-Income Ratio (%)": [
                     round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
@@ -920,13 +896,14 @@ def main():
                     st.markdown(f"- **{name}**: {detail}")
 
             customer_data = {
-                "credit_score": 720,
-                "monthly_salary": 100000.0,
-                "monthly_debt": 30000.0,
-                "savings_amount": 50000.0
+                "credit_score": employment["creditScore"],
+                "monthly_salary": employment["monthlyIncomeAmount"],
+                "monthly_debt": Debt_to_Income_Ratio,
+                "savings_amount": savings
             }
-
-
+            risk_salary = calculate_risk_tolerance_v1(customer_data)
+            risk_tolerance = risk_salary['risk_level']
+            monthly_contribution = risk_salary['monthly_contribution']
 
             col1, col2 = st.columns([3, 1])  # Adjust the ratio to your preference
 
@@ -940,7 +917,6 @@ def main():
             ])
             # In the first column, display the markdown
             with col1:
-                risk_tolerance = calculate_risk_tolerance_v1(customer_data)
                 st.markdown(get_tolerance_v1(risk_tolerance,formula_df))
                 
                 # Automatically speak risk tolerance summary
@@ -948,6 +924,7 @@ def main():
                 dti_ratio = round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
                 savings_condition = "Has savings > Emergency Fund" if total_assets > 22000 else "Emergency fund only" if total_assets > 0 else "No savings"
                 speak_risk_tolerance_summary(risk_tolerance, credit_score, dti_ratio, savings_condition)
+
 
             # In the second column, add the popover
             with col2:
@@ -991,8 +968,6 @@ def main():
 
             risk_levels = ["Low", "Moderate", "High", "Very High", "Unrealistic"]
 
-
-
             # risk_level = user_profile.get("riskTolerance", "Moderate")
 
             # Map risk tolerance to color and meaning
@@ -1025,7 +1000,7 @@ def main():
                 "color": "#95a5a6",
                 "meaning": "Risk tolerance data not applicable"
             }
-            monthly_contribution = round(disposable_income * income_risk_tolerance, 2)
+            #monthly_contribution = round(disposable_income * income_risk_tolerance, 2)
 
             if plan_type == "Short-term":
                 col1, col2, col4 = st.columns(3)  # first row with 3 columns

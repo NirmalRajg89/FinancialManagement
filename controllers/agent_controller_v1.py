@@ -186,29 +186,34 @@ Given the user profile, investment inputs, and target goal, calculate the final 
 
 -------
 ### OUTPUT SECTIONS
+
+### Based on Financial analysis : Monthly investment(40% of salary) : {monthly_contribution}
 ### 1. Investment Options Analysis
  {monthly_contribution_investment}
-
 ---
-### 2.Recommendation{goal_amount} in {tenure}
-Show **two scenarios**:
-
-1. **Required for {tenure} Goal**  
-   - Calculate the required monthly contribution to reach the goal in the given tenure.  
-   - Show a single row for this case.  
-
-Format both scenarios into tables.
-
-| Monthly Contribution ($) | Estimated Value ($) | Duration  | Return Assumption | 
-|---------------------------|---------------------|------------------|-------------------|
-| <calculated amount>       | <future value>      | {tenure}         | <return rate>     | 
-
----
-
-### 3. By Market Capitalization:
-
+### 2. By Market Capitalization:
 {formatted_allocation_table}
+---
+### 3. Sample Investment Examples
+I want to generate a sample investment summary for:
 
+1. Equity Mutual Funds
+2. Stock Market investments (sector or theme-based)
+
+For each type, show 5 sample investments. For each investment, include:
+
+- Fund or Sector/Theme Name
+- Monthly Contribution (use around {monthly_contribution} for Mutual Funds, less in {monthly_contribution} for Stocks)
+- Maturity Value {goal_amount}
+- Example Stocks/Companies
+- Expected Return (%) — use realistic ranges (e.g. 8–12% for mutual funds, 15–20% for stock sectors)
+
+Present all results in a clean, readable table format.
+
+Label the two sections clearly.
+Use sample values for illustration purposes only.
+
+---
 Would you like me to suggest specific mutual funds or ETFs that match this allocation?
 
 Important:

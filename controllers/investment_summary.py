@@ -185,22 +185,39 @@ def calculate_monthly_contribution(goal_amount, duration_months):
 
     return pd.DataFrame(results)
 
-def calculate_risk_tolerance_v1(customer_data: dict) -> str:
+
+def calculate_risk_tolerance_v1(customer_data: dict) -> dict:
     """
-    Core logic for risk tolerance classification.
-    Parameters are passed directly from outside.
+    Core logic for risk tolerance classification and contribution calculation.
+
+    Returns:
+        dict with 'risk_level' and 'monthly_contribution'
     """
     credit_score = customer_data["credit_score"]
     monthly_salary = customer_data["monthly_salary"]
     monthly_debt = customer_data["monthly_debt"]
     savings_amount = customer_data["savings_amount"]
+
     debt_ratio = (monthly_debt / monthly_salary) * 100 if monthly_salary > 0 else 0
 
-    if credit_score > 700 and debt_ratio < 40 and savings_amount > 0:
+    # Determine risk level
+    if credit_score > 700 and debt_ratio < 40 :
         risk_level = "High"
     elif 650 <= credit_score <= 700 and 40 <= debt_ratio <= 70:
         risk_level = "Moderate"
     else:
         risk_level = "Low"
 
-    return risk_level
+    # Contribution mapping
+    risk_contribution_percent = {
+        "High": 0.40,
+        "Moderate": 0.30,
+        "Low": 0.20
+    }
+
+    contribution = monthly_salary * risk_contribution_percent[risk_level]
+
+    return {
+        "risk_level": risk_level,
+        "monthly_contribution": round(contribution, 2)
+    }
