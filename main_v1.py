@@ -241,7 +241,7 @@ def main():
         /* Hide Streamlit branding */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        #header {visibility: hidden;}
+        header {visibility: hidden;}
         
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -298,10 +298,10 @@ def main():
         st.markdown('<div class="menu-container">', unsafe_allow_html=True)
         mode = option_menu(
             menu_title=None,
-            options=["Stock News", "Financial Advisor"],
-            icons=["clipboard-data", "graph-up-arrow"],
+            options=["Stock News", "Financial Advisor", "Financial Advisor - V1"],
+            icons=["clipboard-data", "graph-up-arrow", "graph-up-arrow"],
             menu_icon=None,
-            default_index=1,
+            default_index=2,
             styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
                 "icon": {"color": "white", "font-size": "16px"},
@@ -320,7 +320,6 @@ def main():
                 },
             }
         )
-
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Add spacer
@@ -348,6 +347,471 @@ def main():
         st.markdown("</div>", unsafe_allow_html=True)
 
     if mode == "Financial Advisor":
+        st.session_state.search_query = ""
+        # Load user data
+        with open("data/customer.json") as f:
+            all_user_data = json.load(f)
+
+        st.set_page_config(page_title="Investment Planner", layout="wide")
+        st.title("📊 Personalized Financial Wellness & Investment Advisory Platform")
+
+        # Step 1: Ask for name
+        user_name = st.text_input("Enter your name to begin:")
+
+        if user_name:
+            if user_name not in all_user_data:
+                st.error(f"No data found for user: {user_name}")
+                st.stop()
+
+            # Speak welcome message automatically
+            #speak_welcome_message(user_name)
+            
+            user_profile = all_user_data[user_name]
+
+            # Step 2: Financial summary
+            st.subheader(f"💼 {user_name}'s Financial Summary")
+            employment = user_profile["employment"]
+            assets = user_profile["assets"]
+            liabilities = user_profile["liabilities"]
+            monthlyPaymentAmount = sum(l["monthlyPaymentAmount"] for l in liabilities)
+            total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
+            total_assets = sum(a["total"] for a in assets)
+            dti = monthlyPaymentAmount / user_profile["employment"]["monthlyIncomeAmount"]
+            cash_reserves = sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])
+
+            summary_data = {
+                "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
+                "Credit Score": [employment["creditScore"]],
+                "Total Assets ($)": [sum(a["total"] for a in assets)],
+                "Total Liabilities ($)": total_liabilities,
+                "Monthly Debt Payments ($)": [monthlyPaymentAmount],
+                "Debt-to-Income Ratio (%)": [
+                    round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)],
+                "Net Worth ($)": [sum(a["total"] for a in assets) - total_liabilities],
+                "Cash Reserves ($)": [
+                    sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])],
+            }
+
+            df = pd.DataFrame(summary_data)
+
+            df_with_indicators = add_indicators(df)
+
+            st.table(df_with_indicators)
+
+            def calculate_risk_tolerance(profile: dict) -> str:
+                """Derive risk tolerance from credit score, income, liabilities, and assets."""
+
+                emp = profile.get("employment", {})
+                credit = emp.get("creditScore", 600)
+                income = emp.get("monthlyIncomeAmount", 0)
+
+                # liabilities: sum monthly payments
+                liabilities = profile.get("liabilities", [])
+                monthly_debt = sum(l.get("monthlyPaymentAmount", 0) for l in liabilities)
+
+                # assets: sum liquid totals
+                assets = profile.get("assets", [])
+                liquid_assets = sum(a.get("total", 0) for a in assets)
+
+                # ratios
+                dti = monthly_debt / income if income else 1
+                months_of_cushion = liquid_assets / income if income else 0
+
+                # base level from credit
+                if credit < 600:
+                    level = 1  # Low
+                elif 600 <= credit <= 720:
+                    level = 2  # Moderate
+                else:
+                    level = 3  # High
+
+                # adjust by cushion
+                if months_of_cushion < 3:
+                    level = max(1, level - 1)
+                elif months_of_cushion > 12:
+                    level = min(3, level + 1)
+
+                # adjust by DTI
+                if dti > 0.4:
+                    level = max(1, level - 1)
+
+                return {1: "Low", 2: "Moderate", 3: "High"}[level]
+
+            risk_tolerance = calculate_risk_tolerance(user_profile)
+
+            if risk_tolerance == "Low":
+                st.markdown(
+                    f"""
+                       ### 🟢 Suggested Risk Tolerance: **{risk_tolerance}**
+                       - You prefer safer investments with minimal volatility.  
+                       - Focus on **capital protection** and stable returns.  
+                       """
+                )
+            elif risk_tolerance == "Moderate":
+                st.markdown(
+                    f"""
+                       ### 🟡 Suggested Risk Tolerance: **{risk_tolerance}**
+                       - You are open to **balanced growth** with some risk.  
+                       - Diversified mix of equity and fixed income is recommended.  
+                       """
+                )
+            else:  # High
+                st.markdown(
+                    f"""
+                       ### 🔴 Suggested Risk Tolerance: **{risk_tolerance}**
+                       - You are comfortable with **higher volatility** for potentially higher rewards.  
+                       - Consider aggressive growth strategies with equity focus.  
+                       """
+                )
+
+            # Call function for calculations
+            strategy = generate_investment_strategy(
+                employment["monthlyIncomeAmount"],
+                employment["creditScore"],
+                sum(a["total"] for a in assets),
+                total_liabilities,
+            )
+
+            if total_liabilities > total_assets or dti > 0.5:
+                st.text("⚠️ High debt load — prioritize repayment before investing heavily.")
+            # else:
+            #     display_investment_strategy(strategy)
+
+            # Step 3: Preferences
+            st.subheader("🎯 Investment Preferences")
+
+            plan_type = st.radio("Select Plan Type", ["Short-term", "Long-term"], horizontal=True)
+
+            # Calculate disposable income
+            disposable_income = employment["monthlyIncomeAmount"] - monthlyPaymentAmount
+
+            income_risk_ratios = {"Low": 0.3, "Moderate": 0.5, "High": 0.7}
+
+            # Determine income-based risk tolerance ratio
+            if employment["monthlyIncomeAmount"] > 20000:
+                income_risk_tolerance = income_risk_ratios['High']
+            elif employment["monthlyIncomeAmount"] > 7000:
+                income_risk_tolerance = income_risk_ratios['Moderate']
+            else:
+                income_risk_tolerance = income_risk_ratios['Low']
+
+            default_values = {
+                "Emergency-fund": {"tenure": 6, "goal_amount": 22000},
+
+                "Education": {"tenure": 24, "goal_amount": 80000},
+
+                "Car": {"tenure": 12, "goal_amount": 35000},
+
+                "Bike": {"tenure": 6, "goal_amount": 15000}
+            }
+
+            default_long_term_values = {
+                "Retirement": {
+                    "tenure": 20,
+                    "goal_amount": 1000000
+                },
+                "Home": {
+                    "tenure": 15,
+                    "goal_amount": 450000
+                }
+            }
+
+            risk_levels = ["Low", "Moderate", "High", "Very High", "Unrealistic"]
+
+            def future_value_sip(p, r, n, t):
+                return p * (((1 + r / n) ** (n * t) - 1) / (r / n)) * (1 + r / n)
+
+            def required_return(p, fv_target, n, t):
+                """Find required annual return using binary search"""
+                low, high = 0.0, 0.25  # 0% to 25% annual return
+                for _ in range(100):  # iterate for precision
+                    mid = (low + high) / 2
+                    fv = future_value_sip(p, mid, n, t)
+                    if fv < fv_target:
+                        low = mid
+                    else:
+                        high = mid
+                return mid * 100  # return in %
+
+            # risk_level = user_profile.get("riskTolerance", "Moderate")
+
+            # Map risk tolerance to color and meaning
+            risk_info = {
+                "Low": {
+                    "color": "#2ecc71",  # Green
+                    "meaning": "Prefers safety, avoids loss, very low risk acceptance"
+                },
+                "Moderate": {
+                    "color": "#f1c40f",  # Yellow
+                    "meaning": "Balanced approach, some risk acceptable for moderate growth"
+                },
+                "High": {
+                    "color": "#e67e22",  # Orange
+                    "meaning": "Comfortable with ups and downs, seeks higher returns"
+                },
+                "Very High": {
+                    "color": "#e74c3c",  # Red
+                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
+                },
+                "Unrealistic": {
+                    "color": "#8e44ad",  # Purple
+                    "meaning": "Target requires >20% annual return, not practical — adjust tenure, monthly savings, or goal"
+                }
+            }
+
+            base_risk = "Unknown"
+            risk_level = "Unknown"
+            info = {
+                "color": "#95a5a6",
+                "meaning": "Risk tolerance data not applicable"
+            }
+
+            if plan_type == "Short-term":
+                col1, col2, col3 = st.columns(3)  # first row with 3 columns
+                col4, col5, col6 = st.columns(3)  # second row with 2 columns
+
+                with col1:
+                    goals = st.selectbox("Goal", ["Emergency-fund", "Education", "Car", "Bike"])
+
+                with col2:
+                    tenure = st.number_input("Duration(in months)", min_value=6, max_value=60,
+                                             value=default_values[goals]['tenure'], step=1)
+
+                with col3:
+                    # Calculate default contribution as percentage of disposable income
+                    default_contribution = round(disposable_income * income_risk_tolerance, 2)
+
+                    # Assume st.number_input is from Streamlit, setting input with defaults and limits
+                    monthly_contribution = st.number_input(
+                        label=f"Monthly Investment - {int(income_risk_tolerance * 100)}% (Income - Liabilities)($)",
+                        min_value=100.0,
+                        max_value=float(employment["monthlyIncomeAmount"]),
+                        value=default_contribution,
+                        step=100.0
+                    )
+
+                with col4:
+                    goal_amount = st.number_input(
+                        "Expected Goal Amount($)",
+                        min_value=1000.0,
+                        max_value=1_00_00_000.0,
+                        step=1000.0,
+                        value=float(default_values[goals]['goal_amount'])
+                    )
+
+                with col5:
+
+                    # Required annual return
+                    req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+
+                    # Map to risk profile
+                    if req_return <= 7:
+                        base_risk = "Low"
+                    elif req_return <= 12:
+                        base_risk = "Moderate"
+                    elif req_return <= 16:
+                        base_risk = "High"
+                    elif req_return <= 20:
+                        base_risk = "Very High"
+                    else:
+                        base_risk = "Unrealistic"
+
+                    # Default if unknown risk level
+                    info = risk_info.get(base_risk, info)
+
+                    risk_level = st.selectbox(
+                        "Choose your Risk Level",
+                        options=risk_levels,
+                        index=risk_levels.index(base_risk)
+                    )
+
+
+            elif plan_type == "Long-term":
+                col1, col2, col3 = st.columns(3)  # first row with 3 columns
+                col4, col5, col6 = st.columns(3)  # second row with 2 columns
+
+                with col1:
+                    goals = st.selectbox("Goal", ["Retirement", "Home"])
+
+                with col2:
+                    tenure = st.number_input("Duration(in years)", min_value=5, max_value=30,
+                                             value=default_long_term_values[goals]['tenure'], step=1)
+
+                with col3:
+                    default_contribution = round(disposable_income * income_risk_tolerance, 2)
+                    monthly_contribution = st.number_input(
+                        label=f"Monthly Investment - {int(income_risk_tolerance * 100)}% (Income - Liabilities) ($)",
+                        min_value=100.0,
+                        max_value=float(employment["monthlyIncomeAmount"]),
+                        value=default_contribution,
+                        step=100.0
+                    )
+
+                with col4:
+                    goal_amount = st.number_input(
+                        "Expected Goal Amount($)",
+                        min_value=1000.0,
+                        max_value=5_00_00_000.0,
+                        step=10000.0,
+                        value=float(default_long_term_values[goals]['goal_amount'])
+                    )
+
+                with col5:
+
+                    # Required annual return
+                    req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+
+                    # Map to risk profile
+                    if req_return <= 7:
+                        base_risk = "Low"
+                    elif req_return <= 12:
+                        base_risk = "Moderate"
+                    elif req_return <= 16:
+                        base_risk = "High"
+                    elif req_return <= 20:
+                        base_risk = "Very High"
+                    else:
+                        base_risk = "Unrealistic"
+
+                    # Default if unknown risk level
+                    info = risk_info.get(base_risk, info)
+
+                    risk_level = st.selectbox(
+                        "Choose your Risk Level",
+                        options=risk_levels,
+                        index=risk_levels.index(base_risk)
+                    )
+
+            st.markdown(
+                f"""
+                   <div style="
+                       background-color: {info['color']};
+                       padding: 15px;
+                       border-radius: 10px;
+                       font-weight: 600;
+                       font-size: 1.1em;
+                       color: white;
+                       line-height: 1.4;">
+                       📌 Suggested Risk Level as per Goal inputs: <strong>{base_risk} - ({info['meaning']})</strong><br>
+                   </div>
+                   </br>
+                   """,
+                unsafe_allow_html=True
+            )
+
+            # Ensure chat history exists
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
+
+            investment_options = """
+               - Bank Savings Account (3–4%)
+               - Recurring Deposit (5–7%)
+               - Public Provident Fund (7–8%)
+               - Equity Mutual Funds (8–12%)
+               - Index Funds (10–15%)
+               - Stock Market (15–20%)
+               """
+            allocation = get_dynamic_allocation(risk_level, monthly_contribution)
+            formatted_table = format_allocation_table(allocation, monthly_contribution)
+            goal_duration = calculate_goal_duration(monthly_contribution, goal_amount)
+            print(goal_duration)
+            static_vars = {
+                "monthly_contribution": str(monthly_contribution),
+                "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
+                "goal_amount": str(goal_amount),
+                "risk_tolerance": str(risk_level),
+                "investment_options": investment_options,
+                "formatted_allocation_table": formatted_table,
+                "goal_duration": goal_duration,
+            }
+
+            # Step 4: Generate Plan
+            if goals and monthly_contribution:
+                if st.button("Generate Investment Plan"):
+                    with st.spinner("Getting expert advice..."):
+                        st.session_state.investment_input_data = {
+                            "profile": user_profile,
+                            "investment_options": investment_options,
+                            "user_inputs": {
+                                "plan_type": plan_type,
+                                "goals": goals,
+                                "risk_tolerance": risk_level.lower(),
+                                "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
+                                "monthly_contribution": monthly_contribution,
+                                "goal_amount": goal_amount
+
+                            }
+                        }
+                        # Create agent
+                        st.session_state.agent = create_investment_summary(static_vars)
+
+                        plan_prompt = {
+                            "profile": user_profile,
+                            "user_inputs": st.session_state.investment_input_data["user_inputs"],
+                            "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
+                            "monthly_contribution": monthly_contribution,
+                            "goal_amount": goal_amount,
+                            "risk_tolerance": risk_level,
+                            "investment_options": investment_options,
+                            "question": "Generate a detailed investment plan based on the above."
+                        }
+
+                        user_msg = f"Generate {plan_type} plan — goals: {goals}, risk: {risk_level}, tenure: {tenure} {'months' if plan_type == 'Short-term' else 'years'}, contribution: {monthly_contribution}, Goal to achieve: {goal_amount}"
+                        st.session_state.chat_history.append({"role": "user", "content": user_msg})
+
+                        full_response = ""
+                        response = st.session_state.agent.ask(plan_prompt)
+
+                        response_placeholder = st.empty()
+
+                        for char in response:
+                            full_response += char
+                            response_placeholder.markdown(full_response + "▌")
+                            time.sleep(0.001)
+
+                        # Add loan recommendation if needed
+                        if req_return and plan_type == "Long-term":
+                            loan_summary = create_loan_summary(goal_amount, cash_reserves, tenure, req_return)
+                            full_response += "\n\n" + loan_summary
+
+                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                        time.sleep(0.02)
+                        response_placeholder.empty()
+                        
+                        # Automatically speak investment plan summary
+                        speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+
+            # Step 5: Show conversation + follow-up chat
+            if st.session_state.chat_history:
+                st.subheader("💬 Investment Summary")
+                for msg in st.session_state.chat_history:
+                    with st.chat_message(msg["role"]):
+                        st.markdown(msg["content"])
+
+                # Chat input for follow-ups
+                user_query = st.chat_input("Type your question and press Enter...")
+                if user_query:
+                    st.session_state.chat_history.append({"role": "user", "content": user_query})
+                    with st.chat_message("user"):
+                        st.markdown(user_query)
+
+                    follow_up_context = {"question": user_query}
+                    st.session_state.agent = create_agent_executor(static_vars)
+                    with st.chat_message("assistant"):
+                        with st.spinner("Getting expert advice..."):
+                            full_response = ""
+                            response = st.session_state.agent.ask(follow_up_context)
+                            response_placeholder = st.empty()
+                            for char in response:
+                                full_response += char
+                                response_placeholder.markdown(full_response + "▌")
+                                time.sleep(0.01)
+                            response_placeholder.markdown(full_response)
+
+                    st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                    st.rerun()
+
+    if mode == "Financial Advisor - V1":
 
         # Load user data
         with open("data/customer.json") as f:
@@ -587,7 +1051,7 @@ def main():
                         value=float(default_long_term_values[goals]['goal_amount'])
                     )
 
-            info = risk_info.get(risk_tolerance, info)
+
 
             st.markdown(
                 f"""
@@ -599,7 +1063,7 @@ def main():
                     font-size: 1.1em;
                     color: white;
                     line-height: 1.4;">
-                    📌 Suggested Risk Level as per Goal inputs: <strong>{risk_tolerance} - ({info['meaning']})</strong><br>
+                    📌 Suggested Risk Level as per Goal inputs: <strong>{base_risk} - ({info['meaning']})</strong><br>
                 </div>
                 </br>
                 """,
@@ -622,8 +1086,8 @@ def main():
             formatted_table = format_allocation_table(allocation, monthly_contribution)
             goal_duration = calculate_goal_duration(monthly_contribution,goal_amount)
             monthly_contribution_investment = calculate_monthly_contribution(goal_amount, tenure)
-            #print(goal_duration)
-            #print(monthly_contribution_investment)
+            print(goal_duration)
+            print(monthly_contribution_investment)
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
                 "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",

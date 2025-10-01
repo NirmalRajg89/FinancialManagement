@@ -58,7 +58,7 @@ def create_agent_executor(static_vars: dict):
         get_historical_data,
     ]
 
-    memory = ConversationBufferMemory(
+    memory_1 = ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True,
         input_key="question",   # we are using {question} in the prompt
@@ -77,7 +77,6 @@ def create_agent_executor(static_vars: dict):
         llm=llm,
         tools=tools,
         prompt=prompt,
-        memory=memory,
     )
 
     executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)

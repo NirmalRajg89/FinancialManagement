@@ -64,92 +64,25 @@ def create_agent_executor_v1(static_vars: dict):
         input_key="question",   # we are using {question} in the prompt
         output_key="output",
     )
-
     prompt = ChatPromptTemplate.from_messages([
         ("system",
          "You are a financial assistant. When returning comparisons or structured data, "
-         "format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
+         "format it as either JSON (array of objects) or a Markdown table. Avoid extra text. "
+         "If the user requests to send a summary or information as an SMS, use the 'send_sms_tool' "
+         "with the summary or relevant information as input."),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{question}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
     agent = create_openai_tools_agent(
         llm=llm,
         tools=tools,
-        prompt=prompt,
-        memory=memory,
+        prompt=prompt
     )
 
     executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
     return InvestmentAgent(executor)
-
-
-# # 🔹 Helper to enrich static_vars with loan suggestions
-# def enrich_with_loans(static_vars: dict,
-#                       goal_amount: float,
-#                       current_savings: float,
-#                       tenure_years: float,
-#                       required_return: float) -> dict:
-#     """Augments static_vars with loan_suggestions if risk > moderate."""
-#     if should_offer_loans(required_return):
-#         loan_payload = suggest_loans(
-#             goal_amount=goal_amount,
-#             current_savings=current_savings,
-#             time_horizon_years=tenure_years,
-#             required_return=required_return,
-#         )
-#         static_vars["loan_suggestions"] = loan_payload["loan_rows"]
-#         static_vars["loan_disclaimer"] = loan_payload["disclaimer"]
-#     else:
-#         static_vars["loan_suggestions"] = []
-#         static_vars["loan_disclaimer"] = "Not applicable (risk within acceptable range)."
-#     return static_vars
-
-
-# --- Loan Summary Formatter (text style like create_investment_summary) ---
-def create_loan_summary_v1(goal_amount: float,
-                        current_savings: float,
-                        tenure_years: float,
-                        required_return: any) -> str:
-    """Generate a human-readable loan recommendation summary (text format)."""
-    if not should_offer_loans(required_return):
-        return "No loan recommendation needed — your required return is within moderate risk levels."
-
-    loan_payload = suggest_loans(
-        goal_amount=goal_amount,
-        current_savings=current_savings,
-        time_horizon_years=tenure_years,
-        required_return=required_return,
-    )
-
-    lines = []
-    lines.append("### 📌 Loan Alternatives")
-    lines.append(
-        f"Your goal requires ~{required_return:.1f}% annual return, "
-        "which is **above moderate risk**. A loan could reduce investment risk."
-    )
-    lines.append(f"Funding gap today: ${loan_payload['outstanding_needed_today']:,}")
-    lines.append(f"Time horizon: {loan_payload['time_horizon_months']} months")
-    lines.append("")
-    lines.append("**Available Loan Options:**")
-
-    for row in loan_payload["loan_rows"]:
-        lines.append(
-            f"- {row['Product']} ({row['Rate Range (p.a.)']}, "
-            f"Est. Payment: ${row['Estimated Payment']}/mo) — {row['Notes']}"
-        )
-
-    # Add contextual advice if present
-    if "advice" in loan_payload and loan_payload["advice"]:
-        lines.append("")
-        lines.append("**Additional Advice:**")
-        for tip in loan_payload["advice"]:
-            lines.append(f"- {tip}")
-
-    lines.append("")
-    lines.append(f"_{loan_payload['disclaimer']}_")
-
-    return "\n".join(lines)
 
 
 def create_investment_summary_v1(static_vars: dict):
