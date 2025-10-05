@@ -705,8 +705,9 @@ def main():
                     with st.chat_message("user"):
                         st.markdown(user_query)
 
+                    chat_history = st.session_state.get("chat_history", [])
                     follow_up_context = {"question": user_query}
-                    st.session_state.agent = create_agent_executor_v1(static_vars)
+                    st.session_state.agent = create_agent_executor_v1(static_vars,  history=chat_history)
                     with st.chat_message("assistant"):
                         with st.spinner("Getting expert advice..."):
                             full_response = ""

@@ -6,7 +6,7 @@ ACCESS_TOKEN = "EAAOZBoOcG5TwBPoDX8zwgznKHntbhPrYlmGfGaNnx4zOusZCmSyPlPcRtWSegqs
 PHONE_NUMBER_ID = "687966121069132"#st.secrets('WHATSAPP_PHONE_ID')
 #VERIFY_TOKEN = st.secrets('WHATSAPP_VERIFY_TOKEN')
 
-def send_whatsapp_template_message(recipient_number, summary):
+def send_whatsapp_template_message( summary: str = "Message test",recipient_number : str = "919840116889"):
     url = f"https://graph.facebook.com/v22.0/{PHONE_NUMBER_ID}/messages"
 
     headers = {

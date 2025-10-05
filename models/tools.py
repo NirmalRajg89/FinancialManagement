@@ -8,21 +8,39 @@ from langchain_core.tools import tool
 from dotenv import load_dotenv
 import streamlit as st
 
+from controllers.email_service import send_email
 from controllers.sms_service import send_sms
+from controllers.whatsapp import send_whatsapp_template_message
 
 load_dotenv()
 FINANCIAL_MODELING_PREP_API_KEY = st.secrets["FINANCIAL_MODELING_PREP_API_KEY"]
 
 BASE_URL = "https://financialmodelingprep.com/api/v3"
 
-@tool
-def send_sms_tool(message: str) -> str:
-    """
-       Send the given message as an SMS to the customer.
-       Trigger your internal send_sms function here.
+message_body = f"""
+           Hello ,
+           Thank you for your interest in the Rate Financial Investment.
+           Thank you,  
+           Team Prajna AI
        """
-    send_sms(message)
+@tool
+def send_sms_tool(message: str, to_number: str) -> str:
+    """Send the message as SMS to the given phone number."""
+    send_sms(message, to_number)
     return "Summary sent via SMS."
+
+@tool
+def send_whatsapp_tool(message: str, to_number: str) -> str:
+    """Send the message via WhatsApp to the given phone number."""
+    send_whatsapp_template_message(message, to_number)
+    return "Summary sent via WhatsApp."
+
+@tool
+def send_email_tool(message: str, to_email: str) -> str:
+    """Send the message as Email to the given email address."""
+    send_email(message, to_email)
+    return "Summary sent via Email."
+
 
 def fetch_data(endpoint: str) -> list:
     """Fetch data from FMP API, works for symbol-based or direct endpoints."""
