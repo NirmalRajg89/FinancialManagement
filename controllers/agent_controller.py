@@ -42,7 +42,7 @@ class InvestmentAgent:
         return result["output"] if "output" in result else result
 
 
-def create_agent_executor(static_vars: dict):
+def create_agent_executor(enriched_question: str, memory=None):
     load_env()
 
     llm = ChatOpenAI(model="gpt-4-turbo-preview", temperature=0)
@@ -58,12 +58,19 @@ def create_agent_executor(static_vars: dict):
         get_historical_data,
     ]
 
-    memory_1 = ConversationBufferMemory(
+    # Use the passed memory or default to memory_1 if none is provided
+    memory_1 = memory if memory else ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True,
-        input_key="question",   # we are using {question} in the prompt
+        input_key="question",  # we are using {question} in the prompt
         output_key="output",
     )
+
+    # Pass `agent_scratchpad` as part of static_vars or within the prompt generation logic.
+    static_vars = {
+        "question": enriched_question,
+        "agent_scratchpad": ""  # Set the scratchpad value, could be an empty string or some other data.
+    }
 
     prompt = ChatPromptTemplate.from_messages([
         ("system",
@@ -71,6 +78,7 @@ def create_agent_executor(static_vars: dict):
          "format it as either JSON (array of objects) or a Markdown table. Avoid extra text."),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{question}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),  # Placeholder for scratchpad
     ])
 
     agent = create_openai_tools_agent(
@@ -79,9 +87,8 @@ def create_agent_executor(static_vars: dict):
         prompt=prompt,
     )
 
-    executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+    executor = AgentExecutor(agent=agent, tools=tools, memory=memory_1, verbose=True)
     return InvestmentAgent(executor)
-
 
 # # 🔹 Helper to enrich static_vars with loan suggestions
 # def enrich_with_loans(static_vars: dict,

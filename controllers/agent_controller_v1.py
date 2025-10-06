@@ -2,6 +2,7 @@
 
 import os
 import json
+import re
 from dotenv import load_dotenv
 
 import streamlit as st
@@ -10,7 +11,6 @@ from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from controllers.loan_alternatives import should_offer_loans, suggest_loans
 from models.tools import (
     get_stock_list,
     get_stock_price,
@@ -105,56 +105,86 @@ def create_investment_summary_v1(static_vars: dict):
     base_prompt = ChatPromptTemplate.from_messages([
         ("system",
          """You are a financial assistant.
-Given the user profile, investment inputs, and target goal, calculate the final projected values for the entire tenure and check if the target goal can be achieved.
+    Given the user profile, investment inputs, and target goal, calculate the final projected values for the entire tenure and check if the target goal can be achieved.
 
------
-### RULES
-- Perform all calculations internally. Never explain formulas or steps.
-- Output must be in Markdown tables only.
-- Always format numbers in US numbering style with commas.
-- Prefix all monetary values with $.
-- Always show percentages with the % symbol.
-- In Suggestions column, show each recommendation on a new line using line breaks (- item 1 - item 2).
-- Never leave numbers in raw form.
+    -----
+    ### RULES
+    - Perform all calculations internally. Never explain formulas or steps.
+    - Output must be in Markdown tables only.
+    - Always format numbers in US numbering style with commas.
+    - Prefix all monetary values with $.
+    - Always show percentages with the % symbol.
+    - In Suggestions column, show each recommendation on a new line using line breaks (- item 1 - item 2).
+    - Never leave numbers in raw form.
 
--------
-### OUTPUT SECTIONS
+    -------
+    ### OUTPUT SECTIONS
 
-### Based on Financial analysis : Monthly investment(40% of salary) : {monthly_contribution}
-### 1. Investment Options Analysis
- {monthly_contribution_investment}
----
-### 2. By Market Capitalization:
-{formatted_allocation_table}
----
-### 3. Sample Investment Examples
-I want to generate a sample investment summary for:
+    ### Based on Financial analysis : Max Monthly investment  : {monthly_contribution}
 
-1. Equity Mutual Funds
-2. Stock Market investments (sector or theme-based)
+    ### 1. Investment Options Analysis
 
-For each type, show 5 sample investments. For each investment, include:
+    {monthly_contribution_investment}
 
-- Fund or Sector/Theme Name
-- Monthly Contribution (use around {monthly_contribution} for Mutual Funds, less in {monthly_contribution} for Stocks)
-- Maturity Value {goal_amount}
-- Example Stocks/Companies
-- Expected Return (%) — use realistic ranges (e.g. 8–12% for mutual funds, 15–20% for stock sectors)
+    ---
+    ### 2. Sample Investment Examples
+    Get 3 mutual funds in different caps large, small & medium with avg returns. 
+    Also get equities in only 3 sectors Technology, healthcare, financial services with avg returns.  
+    Calculate the monthly investment to contribute based on goal amount, tenure, avg returns and append.
+    
+    I want to generate a sample investment summary including:
+    
+    #### Mutual Funds (3 samples)
+    For each mutual fund, include the following columns:
+    - Fund Name
+    - Category (Large Cap, Mid Cap, Small Cap, etc.)
+    - Expected Return (%)
+    - Risk Level (Low, Medium, High)
+    - Monthly Investment
+    - Goal Tenure ()
+    - Maturity Value ({goal_amount})
 
-Present all results in a clean, readable table format.
+    #### Equity Investments (3 samples)
+    For each equity sector/theme, include:
+    - Sector/Theme Name
+    - Expected Return (%)
+    - Market Cap Segment (Large, Mid, Small)
+    - Investment Horizon Recommendation (Short, Medium, Long-term)
+    - Monthly Investment
+    - Maturity Value ({goal_amount})
+    - Goal Tenure ()
+    - Example Stocks/Companies
 
-Label the two sections clearly.
-Use sample values for illustration purposes only.
+    #### Commodities & Alternative Investments (optional)
+    Include key commodity or alternative asset classes with:
+    - Investment Option
+    - Expected Return (%)
+    - Risk Level
+    - Monthly Contribution (optional)
+    - Maturity Value ({goal_amount})
+    - Notes on liquidity and market characteristics
 
----
-Would you like me to suggest specific mutual funds or ETFs that match this allocation?
+    Present all results in clean, readable Markdown tables with clear section headings.
 
-Important:
-- All values are for the full tenure, factoring in monthly contributions & compounding.
-- Never show formulas, only the results.
-- Always include the Goal Feasibility section.
-- Alternate suggestions must be realistic (aligned with risk tolerance).
-"""),
+    ---
+    Would you like me to suggest specific mutual funds, ETFs, or commodity investments that match this allocation?
+
+    Important:
+    - All values are for the full tenure, factoring in monthly contributions & compounding where applicable.
+    - Never show formulas, only the results.
+    - Always include the Goal Feasibility section.
+    # - Alternate suggestions must be realistic and aligned with risk tolerance.
+    
+    - In alternate Suggestions, if {plan_type} is "Short-term", Suggest diversification and review & adjust funds in account of financial goals.
+    - If {plan_type} is "Long-term" and {goals} is “Home", suggest to consider the Mortgage plans by visiting {mortgage_info_url}.
+    - If {plan_type} is "Long-term" {has_house_asset} and {goals} is "Retirement", optionally suggest HELOC as a liquidity strategy.
+    - If {plan_type} is "Long-term" {has_house_asset} and {goals} is "Home", Suggest to go to HELOC by visiting {heloc_info_url} or Mortgage plans by visiting {mortgage_info_url}.
+    - If there is no {has_house_asset}, skip HELOC advice.
+    - If {total_liabilities} exists, suggest Refinancing for a better interest rate by visiting {refinance_info_url}.
+    - For clarity:
+        - HELOC Example: {heloc_example}
+        - Refinancing Example: {refinance_example}
+    """),
         MessagesPlaceholder(variable_name="chat_history", optional=True),
         ("human", "{question}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -174,3 +204,25 @@ Important:
     )
 
     return InvestmentAgent(executor)
+
+
+def calculate_monthly_contribution(goal_amount, annual_return, years):
+    """Calculate the monthly contribution needed for the investment goal."""
+    # Ensure goal_amount is a float (numeric)
+    goal_amount = float(goal_amount)
+
+    # Calculate the total number of months
+    months = years * 12
+
+    # Convert annual return to monthly return
+    monthly_return = annual_return / 12
+
+    # Calculate monthly contribution based on the formula
+    if monthly_return == 0:
+        # If there's no return (0% expected), we can simply divide goal amount by months
+        monthly_contribution = goal_amount / months
+    else:
+        monthly_contribution = goal_amount * monthly_return / ((1 + monthly_return) ** months - 1)
+
+    # Round to 2 decimal places
+    return round(monthly_contribution, 2)

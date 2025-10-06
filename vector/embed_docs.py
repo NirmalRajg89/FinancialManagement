@@ -21,7 +21,9 @@ QDRANT_API_KEY=os.getenv('QDRANT_API_KEY')
 # 1. Load documents
 docs = []
 
-md_dir = os.path.join("..", "gbi_knowledge_base")  # folder parallel to 'vector/'
+md_dir = "/Users/kokotha/Desktop/FinancialManagement/RateDocs"
+
+print(f"Looking for files in: {md_dir}")
 
 for file in os.listdir(md_dir):
     if file.endswith((".md", ".pdf", ".txt")):
@@ -68,7 +70,7 @@ client = QdrantClient(
     api_key=QDRANT_API_KEY,
 )
 
-collection_name = "GBI_docs"
+collection_name = "Rate_docs"
 
 # Create collection if it doesn't exist
 if not client.collection_exists(collection_name):

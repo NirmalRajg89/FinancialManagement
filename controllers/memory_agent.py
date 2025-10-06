@@ -13,7 +13,7 @@ MEMORY_LOOKUP_PROMPT = ChatPromptTemplate.from_messages([
 
         The user just asked: "{question}"
 
-        Based on the conversation so far, can you answer this without needing new information?
+        Based on the conver sation so far, can you answer this without needing new information?
         If yes, provide the answer directly. If not, say exactly: "NOT_FOUND".
     """)
 ])

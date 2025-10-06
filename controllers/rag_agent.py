@@ -10,8 +10,8 @@ from langchain_openai import ChatOpenAI
 from controllers.agent_controller import create_agent_executor
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-# Directory containing Rate.com PDFs
-docs_dir = os.path.join(os.path.dirname(__file__), '..', 'Rate.com')
+# Directory containing RateDocs PDFs
+docs_dir = os.path.join(os.path.dirname(__file__), '..', 'RateDocs')
 # Define agent types and their descriptions
 AGENT_TYPES = [
     {
@@ -20,7 +20,7 @@ AGENT_TYPES = [
     },
     {
         "name": "ratecom",
-        "description": "Questions about Rate.com, its documents, policies, or company information."
+        "description": "Questions about RateDocs, its documents, policies, or company information."
     },
     # Add more agent types here as needed
 ]

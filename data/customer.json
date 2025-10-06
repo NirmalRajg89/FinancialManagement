@@ -112,6 +112,7 @@
     ],
     "liabilities": [
       {
+        "name": "Mastercard",
         "volIndex": 7,
         "accountIdentifier": "877755",
         "liabilityIndex": 9,
@@ -177,6 +178,7 @@
     ],
     "liabilities": [
       {
+        "name": "Loan Shark Inc",
         "volIndex": 8,
         "accountIdentifier": "999111",
         "liabilityIndex": 10,

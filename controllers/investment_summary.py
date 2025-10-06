@@ -153,37 +153,83 @@ def calculate_monthly_contribution(goal_amount, duration_months):
 
 
 
-def calculate_monthly_contribution(goal_amount, duration_months):
-    """Core calculation logic for monthly contribution and maturity."""
+def calculate_monthly_contribution(goal_amount, duration, plan_type):
+    """
+    Calculate monthly contribution to reach goal amount over duration.
+
+    For compound interest instruments: calculate based on monthly compounding.
+    For simple interest instruments: calculate based on simple interest assumption.
+
+    Parameters:
+    - goal_amount: target maturity amount
+    - duration: years (if long-term) or months (if short-term)
+    - plan_type: "Long-term" or "Short-term"
+
+    Returns:
+    - DataFrame with investment options and monthly contributions
+    """
     results = []
+    # Investment options with interest type
     options = [
-        ("Bank Savings Account", (3, 4)),
-        ("Recurring Deposit", (5, 7)),
-        ("Public Provident Fund", (7, 8)),
-        ("Equity Mutual Funds", (8, 12)),
-        ("Index Funds", (10, 15)),
-        ("Stock Market", (15, 20))
+        ("Bank Savings Account", (3, 4), "compound"),
+        ("Recurring Deposit", (5, 7), "compound"),
+        ("Public Provident Fund", (7, 8), "compound"),
+        ("Equity Mutual Funds", (8, 12), "compound"),
+        ("Index Funds", (10, 15), "compound"),
+        ("Stock Market", (15, 20), "compound")
     ]
 
-    for name, (low, high) in options:
-        avg_return = (low + high) / 2
-        monthly_rate = (avg_return / 100) / 12
+    # Convert duration to months
+    if plan_type.lower() == "long-term":
+        duration_months = duration * 12
+    else:
+        duration_months = duration
 
-        monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
-        future_value = monthly_contribution * ((1 + monthly_rate) ** duration_months - 1) / monthly_rate
-        principal = monthly_contribution * duration_months
-        interest = future_value - principal
+    duration_years = duration_months / 12
+
+    for name, (low, high), interest_type in options:
+        avg_return_annual = (low + high) / 2
+        monthly_rate = (avg_return_annual / 100) / 12
+
+        if interest_type == "compound":
+            # compound interest monthly contribution formula
+            if monthly_rate == 0:
+                monthly_contribution = goal_amount / duration_months
+            else:
+                monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
+
+            effective_annual_return = round(((1 + monthly_rate) ** 12 - 1) * 100, 2)
+            compounding_note = "Monthly Compounding"
+
+        else:  # simple interest
+            # Simple interest total interest = P * r * t
+            # Goal = Principal + Interest = P + P*r*t = P*(1 + r*t)
+            # Solve for Principal (P)
+            total_rate = avg_return_annual / 100 * duration_years
+            principal = goal_amount / (1 + total_rate)
+            monthly_contribution = principal / duration_months
+            effective_annual_return = round(avg_return_annual, 2)
+            compounding_note = "Simple Interest"
+
+        duration_value = duration_months if plan_type.lower() == 'short_term' else duration_years
 
         results.append({
             "Investment Option": name,
-            "Return Assumption": f"{low}–{high}%",
+            "Return Assumption (%)": f"{low}–{high}",
+            # "Interest Type": compounding_note,
             "Monthly Contribution": round(monthly_contribution, 2),
-            "Principal (Monthly × Months)": round(principal, 2),
-            "Total Interest Earned": round(interest, 2),
-            "Total Maturity Amount": round(future_value, 2)
+            "Duration": round(duration_value, 2),  # months or years based on plan_type
+            "Goal Amount": round(goal_amount, 2),
+            # "Effective Annual Return (%)": effective_annual_return
         })
 
-    return pd.DataFrame(results)
+    df = pd.DataFrame(results)
+
+    # Rename the Duration column to include unit
+    duration_unit = "Months" if plan_type.lower() == 'short-term' else "Years"
+    df.rename(columns={"Duration": f"Duration ({duration_unit})"}, inplace=True)
+
+    return df
 
 
 def calculate_risk_tolerance_v1(customer_data: dict) -> dict:
@@ -194,11 +240,11 @@ def calculate_risk_tolerance_v1(customer_data: dict) -> dict:
         dict with 'risk_level' and 'monthly_contribution'
     """
     credit_score = customer_data["credit_score"]
-    monthly_salary = customer_data["monthly_salary"]
-    monthly_debt = customer_data["monthly_debt"]
-    savings_amount = customer_data["savings_amount"]
+    # monthly_salary = customer_data["monthly_salary"]
+    Debt_to_Income_Ratio = customer_data["Debt_to_Income_Ratio"]
+    # savings_amount = customer_data["savings_amount"]
 
-    debt_ratio = (monthly_debt / monthly_salary) * 100 if monthly_salary > 0 else 0
+    debt_ratio = Debt_to_Income_Ratio
 
     # Determine risk level
     if credit_score > 700 and debt_ratio < 40 :
@@ -209,15 +255,15 @@ def calculate_risk_tolerance_v1(customer_data: dict) -> dict:
         risk_level = "Low"
 
     # Contribution mapping
-    risk_contribution_percent = {
-        "High": 0.40,
-        "Moderate": 0.30,
-        "Low": 0.20
-    }
+    # risk_contribution_percent = {
+    #     "High": 0.70,
+    #     "Moderate": 0.50,
+    #     "Low": 0.30
+    # }
 
-    contribution = monthly_salary * risk_contribution_percent[risk_level]
+    # contribution = monthly_salary * risk_contribution_percent[risk_level]
 
     return {
         "risk_level": risk_level,
-        "monthly_contribution": round(contribution, 2)
+        # "monthly_contribution": round(contribution, 2)
     }

@@ -13,7 +13,11 @@ AGENT_TYPES = [
     },
     {
         "name": "rate",
-        "description": "Questions about HELOC (Home Equity Line of Credit) and it's rates, reverse mortgage, HECM (Home Equity Conversion Mortgage), requirements for a credit score on a personal loan, and Rate.com its documents, policies, or company information."
+        "description": "Questions about HELOC (Home Equity Line of Credit) and it's rates, reverse mortgage, HECM (Home Equity Conversion Mortgage), requirements for a credit score on a personal loan, and RateDocs its documents, policies, or company information."
+    },
+    {
+        "name": "diversify",
+        "description": "Question asking to diversify the investment"
     },
     {
         "name": "stocks",

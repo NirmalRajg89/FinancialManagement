@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from dotenv import load_dotenv
 import streamlit as st
 
-from controllers.sms_service import send_sms
+# from controllers.sms_service import send_sms
 
 load_dotenv()
 FINANCIAL_MODELING_PREP_API_KEY = st.secrets["FINANCIAL_MODELING_PREP_API_KEY"]
@@ -16,13 +16,13 @@ FINANCIAL_MODELING_PREP_API_KEY = st.secrets["FINANCIAL_MODELING_PREP_API_KEY"]
 BASE_URL = "https://financialmodelingprep.com/api/v3"
 
 @tool
-def send_sms_tool(message: str) -> str:
-    """
-       Send the given message as an SMS to the customer.
-       Trigger your internal send_sms function here.
-       """
-    send_sms(message)
-    return "Summary sent via SMS."
+# def send_sms_tool(message: str) -> str:
+#     """
+#        Send the given message as an SMS to the customer.
+#        Trigger your internal send_sms function here.
+#        """
+#     send_sms(message)
+#     return "Summary sent via SMS."
 
 def fetch_data(endpoint: str) -> list:
     """Fetch data from FMP API, works for symbol-based or direct endpoints."""
@@ -32,8 +32,8 @@ def fetch_data(endpoint: str) -> list:
         url += f"&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
     else:
         url += f"?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
-
     response = requests.get(url)
+    print(f"response", response)
     response.raise_for_status()
     return response.json()
 

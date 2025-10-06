@@ -1,6 +1,5 @@
 import base64
 import json
-from io import StringIO
 
 import pandas as pd
 import streamlit as st
@@ -9,20 +8,14 @@ from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
 from controllers.agent_controller import create_agent_executor, create_investment_summary, create_loan_summary
 from controllers.agent_controller_v1 import create_investment_summary_v1, create_agent_executor_v1
-from controllers.employee_agent import generate_financial_summary_langchain, get_user_summary_data, load_customer_data
 from controllers.flow import get_dynamic_allocation, format_allocation_table
-from controllers.investment_summary import generate_investment_strategy, display_investment_strategy, \
-    calculate_goal_duration, calculate_monthly_contribution, calculate_risk_tolerance_v1
+from controllers.investment_summary import generate_investment_strategy, calculate_goal_duration, calculate_monthly_contribution, calculate_risk_tolerance_v1
 from controllers.newsAPI_controller import get_stock_news, search_stock_news, get_stock_statistics, get_stock_data, get_related_stocks
 from controllers.beginner_friendly_controller import get_simple_stock_data, get_popular_stocks_overview, get_beginner_news, get_simple_market_sentiment, get_beginner_tips
-from langchain.schema import AIMessage, HumanMessage
 import time
 
-from controllers.utils import format_tenure, get_tolerance_v1, add_indicators
-from controllers.wellness_controller import get_wellness_response, extract_youtube_links
-from controllers.router_graph import app
-from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary, speak_welcome_message
-
+from controllers.utils import format_tenure, get_tolerance_v1
+from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary
 
 
 def img_to_base64(image_path):
