@@ -6,7 +6,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
-from controllers.agent_controller_v1 import create_investment_summary_v1, create_agent_executor_v1
+from controllers.agent_controller_v1 import create_investment_summary_v1
 from controllers.flow import get_dynamic_allocation, format_allocation_table
 from controllers.investment_summary import calculate_goal_duration, calculate_monthly_contribution, calculate_risk_tolerance_v1
 from controllers.newsAPI_controller import get_stock_news, search_stock_news, get_stock_statistics, get_stock_data, get_related_stocks
@@ -449,7 +449,7 @@ def main():
                 # Automatically speak risk tolerance summary
                 credit_score = employment["creditScore"]
                 savings_condition = "Has savings > Emergency Fund" if total_assets > 22000 else "Emergency fund only" if total_assets > 0 else "No savings"
-                speak_risk_tolerance_summary(risk_tolerance, credit_score, Debt_to_Income_Ratio, savings_condition)
+                # speak_risk_tolerance_summary(risk_tolerance, credit_score, Debt_to_Income_Ratio, savings_condition)
 
 
             # In the second column, add the popover
@@ -725,7 +725,7 @@ def main():
                         response_placeholder.empty()
                         
                         # Automatically speak investment plan summary
-                        speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        # speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
@@ -743,7 +743,7 @@ def main():
 
                     chat_history = st.session_state.get("chat_history", [])
                     follow_up_context = {"question": user_query}
-                    st.session_state.agent = create_agent_executor_v1(static_vars,  history=chat_history)
+                    # st.session_state.agent = create_agent_executor_v1(static_vars,  history=chat_history)
                     with st.chat_message("assistant"):
                         with st.spinner("Getting expert advice..."):
                             full_response = ""

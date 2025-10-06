@@ -19,3 +19,5 @@ plotly
 numpy
 pyttsx3
 tabulate
+boto3
+twilio

@@ -20,6 +20,10 @@ AGENT_TYPES = [
         "description": "Question asking to diversify the investment"
     },
     {
+        "name": "media",
+        "description": "Questions asking to send conversation or information through whatsapp, email, sms"
+    },
+    {
         "name": "stocks",
         "description": "Questions about stocks, stock prices, company financials, or investment advice."
     },

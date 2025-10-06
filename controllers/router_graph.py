@@ -11,8 +11,9 @@ from controllers.portfolio_optimizer_agent import portfolio_optimizer_agent
 from controllers.router_agent import classify_query
 from controllers.gbi_agent import GBI_RAG_agent
 from controllers.rate_agent import Rate_RAG_agent
+from controllers.send_media_agent import send_media_agent
 
-ROUTE_TYPES = ["gbi", "rate", "stocks", "generic", "out_of_scope"]
+ROUTE_TYPES = ["gbi", "rate", "diversify", "media", "stocks", "generic", "out_of_scope"]
 
 class AgentState(TypedDict):
     question: str
@@ -45,6 +46,8 @@ def agent_node(state: AgentState):
         result = Rate_RAG_agent(state["question"], memory=state["memory"])
     elif route == "diversify":
         result = portfolio_optimizer_agent(st.session_state.static_vars )
+    elif route == "media":
+        result = send_media_agent(st.session_state.get("chat_history", []))
     elif route == "stocks":
         gbi_context = state["intermediate"].get("gbi", "")
         enriched_question = f"{gbi_context}\n\n{state['question']}" if gbi_context else state["question"]
