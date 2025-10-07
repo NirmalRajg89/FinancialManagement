@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import math
 
+def color_monthly_contribution(val, threshold):
+    color = 'red' if val > threshold else 'green'
+    return f'color: {color}'
 
 def generate_investment_strategy(monthly_income, credit_score, total_assets, total_liabilities):
     disposable_income = monthly_income - (total_liabilities if total_liabilities else 0)
@@ -102,58 +105,7 @@ def calculate_goal_duration(monthly_contribution, goal_amount):
     return df
 
 
-
-
-def calculate_monthly_contribution(goal_amount, duration_months):
-    """
-    Calculate monthly contribution, principal invested, total interest earned,
-    and maturity amount for different investment return assumptions.
-    """
-
-    results = []
-
-    options = [
-        ("Bank Savings Account", (3, 4)),
-        ("Recurring Deposit", (5, 7)),
-        ("Public Provident Fund", (7, 8)),
-        ("Equity Mutual Funds", (8, 12)),
-        ("Index Funds", (10, 15)),
-        ("Stock Market", (15, 20))
-    ]
-
-    for name, (low, high) in options:
-        avg_return = (low + high) / 2
-        annual_rate = avg_return / 100
-        monthly_rate = annual_rate / 12
-
-        # Required monthly contribution to reach goal
-        if monthly_rate > 0:
-            monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
-        else:
-            monthly_contribution = goal_amount / duration_months
-
-        # Calculate maturity amount using compound interest
-        future_value = monthly_contribution * ((1 + monthly_rate) ** duration_months - 1) / monthly_rate
-
-        # Calculate principal and interest separately
-        principal_invested = monthly_contribution * duration_months
-        total_interest = future_value - principal_invested
-
-        results.append({
-            "Investment Option": name,
-            "Return Assumption": f"{low}–{high}%",
-            "Monthly Contribution": round(monthly_contribution, 2),
-            "Principal (Monthly × Months)": round(principal_invested, 2),
-            "Total Interest Earned": round(total_interest, 2),
-            "Total Maturity Amount": round(principal_invested + total_interest, 2)
-        })
-
-    df = pd.DataFrame(results)
-    return df
-
-
-
-def calculate_monthly_contribution(goal_amount, duration, plan_type):
+def calculate_monthly_contribution(goal_amount, duration, plan_type, monthly_contribution):
     """
     Calculate monthly contribution to reach goal amount over duration.
 
@@ -194,9 +146,9 @@ def calculate_monthly_contribution(goal_amount, duration, plan_type):
         if interest_type == "compound":
             # compound interest monthly contribution formula
             if monthly_rate == 0:
-                monthly_contribution = goal_amount / duration_months
+                monthly_calculated_contribution = goal_amount / duration_months
             else:
-                monthly_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
+                monthly_calculated_contribution = goal_amount * monthly_rate / ((1 + monthly_rate) ** duration_months - 1)
 
             effective_annual_return = round(((1 + monthly_rate) ** 12 - 1) * 100, 2)
             compounding_note = "Monthly Compounding"
@@ -207,7 +159,7 @@ def calculate_monthly_contribution(goal_amount, duration, plan_type):
             # Solve for Principal (P)
             total_rate = avg_return_annual / 100 * duration_years
             principal = goal_amount / (1 + total_rate)
-            monthly_contribution = principal / duration_months
+            monthly_calculated_contribution = principal / duration_months
             effective_annual_return = round(avg_return_annual, 2)
             compounding_note = "Simple Interest"
 
@@ -216,11 +168,12 @@ def calculate_monthly_contribution(goal_amount, duration, plan_type):
         results.append({
             "Investment Option": name,
             "Return Assumption (%)": f"{low}–{high}",
+            "Effective Annual Return (%)": effective_annual_return,
             # "Interest Type": compounding_note,
-            "Monthly Contribution": round(monthly_contribution, 2),
+            "Monthly Contribution": round(monthly_calculated_contribution, 2),
             "Duration": round(duration_value, 2),  # months or years based on plan_type
             "Goal Amount": round(goal_amount, 2),
-            # "Effective Annual Return (%)": effective_annual_return
+            "Recommended": "Yes" if monthly_contribution > monthly_calculated_contribution else "No"
         })
 
     df = pd.DataFrame(results)
@@ -230,6 +183,15 @@ def calculate_monthly_contribution(goal_amount, duration, plan_type):
     df.rename(columns={"Duration": f"Duration ({duration_unit})"}, inplace=True)
 
     return df
+    # st.session_state.df_data = df  # raw DataFrame is JSON-serializable
+    #
+    # threshold = monthly_contribution
+    # # Apply color styling to Monthly Contribution
+    # def color_monthly_contribution(val):
+    #     color = 'red' if val > int(threshold) else 'green'
+    #     return f'color: {color}; font-weight: bold'
+    #
+    # st.dataframe(df.style.applymap(color_monthly_contribution, subset=['Monthly Contribution']))
 
 
 def calculate_risk_tolerance_v1(customer_data: dict) -> dict:
