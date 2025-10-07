@@ -1,53 +1,36 @@
 import streamlit as st
 import speech_recognition as sr
+import pyttsx3
 import threading
 import time
 
 
 # ---------------------- VOICE UTILS ---------------------- #
 
-# Text-to-speech may not be available in all environments (e.g., Streamlit Cloud, Python 3.13)
-# Lazy-initialize and fail open so the app doesn't crash when TTS isn't supported.
-_tts_engine = None
-_tts_tried_init = False
-
-def _init_tts_if_needed():
-    global _tts_engine, _tts_tried_init
-    if _tts_tried_init:
-        return
-    _tts_tried_init = True
-    try:
-        import pyttsx3  # Local import to avoid hard dependency at module import time
-        _tts_engine = pyttsx3.init()
-    except Exception as e:
-        # Surface a non-blocking warning and continue without TTS
-        _tts_engine = None
-        try:
-            st.info("Text-to-speech is unavailable in this environment.")
-        except Exception:
-            # If Streamlit isn't ready, silently ignore
-            pass
+# Initialize text-to-speech engine
+#engine = pyttsx3.init()
+engine = pyttsx3.init()
 
 def speak_text(text):
+    """Speak assistant response using TTS"""
+    #engine.say(text)
+    #engine.runAndWait()
     """Speak the given text using text-to-speech with human-like settings"""
     try:
-        _init_tts_if_needed()
-        if _tts_engine is None:
-            return
-
         # Set voice properties for more human-like speech
-        _tts_engine.setProperty('rate', 180)  # Faster, more natural speed
-        _tts_engine.setProperty('volume', 0.9)  # Slightly louder for clarity
+        engine.setProperty('rate', 188)  # Faster, more natural speed
+        engine.setProperty('volume', 0.9)  # Slightly louder for clarity
+        engine.setProperty('pitch', 0.1)  # Slightly higher pitch for warmth
         
         # Get available voices and select the most human-like one
-        voices = _tts_engine.getProperty('voices')
+        voices = engine.getProperty('voices')
         if voices:
             # Prioritize voices that sound more human
             preferred_voices = ['samantha', 'alex', 'victoria', 'daniel', 'zira', 'female']
             for preferred in preferred_voices:
                 for voice in voices:
                     if preferred in voice.name.lower():
-                        _tts_engine.setProperty('voice', voice.id)
+                        engine.setProperty('voice', voice.id)
                         break
                 else:
                     continue
@@ -58,8 +41,8 @@ def speak_text(text):
         text = text.replace('!', '! ')  # Add slight pause after exclamations
         text = text.replace('?', '? ')  # Add slight pause after questions
         
-        _tts_engine.say(text)
-        _tts_engine.runAndWait()
+        engine.say(text)
+        engine.runAndWait()
     except Exception as e:
         st.error(f"Error with text-to-speech: {str(e)}")
 
@@ -94,13 +77,31 @@ def speak_risk_tolerance_summary(risk_tolerance, credit_score, dti_ratio, saving
     speak_text_async(summary, delay=3)
     return summary
 
-def speak_investment_plan_summary(plan_type, goals, risk_tolerance, monthly_contribution, goal_amount, tenure):
+def speak_investment_summary(plan_type, goals, risk_tolerance, monthly_contribution, goal_amount, tenure):
     """Generate and speak a conversational summary about the investment plan"""
     # Create a conversational summary of the investment plan
     goals_text = ", ".join(goals) if isinstance(goals, list) else str(goals)
     
-    summary = f"Perfect! I've created your personalized {plan_type.lower()} investment plan. You'll be investing ${monthly_contribution} each month to reach your goal of ${goal_amount:,} for {goals_text}. This {tenure} {'month' if plan_type == 'Short-term' else 'year'} timeline with your {risk_tolerance} risk tolerance gives us a great foundation to work with. The strategy I've designed will help you reach your financial goals while staying comfortable with the level of risk."
-    
+ # Format currency as whole dollars (no decimals) with thousand separators
+    def to_int(val):
+        try:
+            return int(round(float(val)))
+        except Exception:
+            return val
+    mc_int = to_int(monthly_contribution)
+    ga_int = to_int(goal_amount)
+    mc_str = f"{mc_int:,}" if isinstance(mc_int, int) else str(monthly_contribution)
+    ga_str = f"{ga_int:,}" if isinstance(ga_int, int) else str(goal_amount)
+    # Tenure unit
+    unit = "month" if plan_type == "Short-term" else "year"
+    tenure_int = to_int(tenure)
+    tenure_str = str(tenure_int) if isinstance(tenure_int, int) else str(tenure)
+
+    summary = (
+        f"Perfect! I've created your personalized {plan_type.lower()} investment plan. "
+        f"You'll be investing ${mc_str} each month to reach your goal of ${ga_str} "
+        f"over {tenure_str} {unit}{'' if tenure_str == '1' else 's'}. "
+        f"By diversifying across Equity Mutual Funds, Index Funds, and Public Provident Fund, "  )  
     speak_text_async(summary)
     return summary
 

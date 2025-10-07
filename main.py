@@ -16,7 +16,7 @@ import time
 from controllers.router_graph import app
 from controllers.run_investment_agent import run_investment_agent
 from controllers.utils import format_tenure, get_tolerance_v1
-from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary
+from controllers.voice_controller import speak_investment_summary, speak_welcome_message
 
 
 def img_to_base64(image_path):
@@ -359,7 +359,7 @@ def main():
                 st.stop()
 
             # Speak welcome message automatically
-            #speak_welcome_message(user_name)
+            speak_welcome_message(user_name)
             
             user_profile = all_user_data[user_name]
 
@@ -790,7 +790,7 @@ def main():
 
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
-                        # speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
