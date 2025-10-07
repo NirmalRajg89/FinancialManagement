@@ -65,6 +65,8 @@ def create_investment_summary_v1(static_vars: dict):
     - Do **not** include contextual recommendations (e.g., HELOC, mortgage, refinance) — these will be handled by another agent.
 
     ---
+    ### Data
+    {funds_data}
 
     ### RULES
     - Perform all calculations internally; **never show formulas**.
@@ -74,9 +76,10 @@ def create_investment_summary_v1(static_vars: dict):
     - Prefix monetary values with `$`.
     - Clearly separate investment categories with `###` headings.
     - Keep output professional, minimal, and visually scannable.
-    - For Mutual Funds Output section, we need to show only Funds having Expected Return greater than {req_return}
-    - For Equity Investments, Consider sectors Pharma, EV, Energy sectors only and Expected Return greater than {req_return}
-    - Suggest Commodities & Alternatives only if their Expected Return greater than {req_return}
+    - For Equity Mutual Funds Output section, show only above Funds from Data section having Return greater than {req_return} and calculate monthly investment requrired to achieve the maturity value within goal tenure at expected return
+    - For Index Funds Output section, show only above Funds from Data section having Return greater than {req_return} and calculate monthly investment requrired to achieve the maturity value within goal tenure at expected return
+    - For Stocks Investments, Consider sectors from above data only and Return greater than {req_return} and calculate monthly investment requrired to achieve the maturity value within goal tenure at expected return
+    # - Suggest Commodities & Alternatives only if their Expected Return greater than {req_return}
     ---
 
     ### OUTPUT SECTIONS
@@ -85,9 +88,19 @@ def create_investment_summary_v1(static_vars: dict):
     Summarize user's goal, plan type, tenure, monthly contribution, and goal amount.
 
     #### 2. Investment Options Analysis
-    Use {monthly_contribution_investment} and show potential monthly allocations or assumptions.
-
-    #### 3. Mutual Funds (3 samples)
+    Use {monthly_contribution_investment} and show potential monthly allocations or assumptions. Show all the options irrespective of req_return, don't trim any options.
+    
+    #### 3. Equity Mutual Funds
+    Include:
+    - Fund Name
+    - Category (Large/Mid/Small Cap)
+    - Expected Return (%)
+    - Risk Level (Low/Medium/High)
+    - Monthly Investment
+    - Goal Tenure ({tenure})
+    - Maturity Value ({goal_amount})
+    
+    #### 4. Index Funds
     Include:
     - Fund Name
     - Category (Large/Mid/Small Cap)
@@ -97,7 +110,7 @@ def create_investment_summary_v1(static_vars: dict):
     - Goal Tenure ({tenure})
     - Maturity Value ({goal_amount})
 
-    #### 4. Equity Investments (3 samples)
+    #### 5. Stocks Investments
     Include:
     - Sector/Theme Name
     - Expected Return (%)
@@ -107,16 +120,16 @@ def create_investment_summary_v1(static_vars: dict):
     - Maturity Value ({goal_amount})
     - Example Stocks/Companies
 
-    #### 5. Commodities & Alternatives
-    Include:
-    - Investment Option
-    - Expected Return (%)
-    - Risk Level
-    - Monthly Contribution (optional)
-    - Maturity Value ({goal_amount})
-    - Notes on liquidity and characteristics
+    # #### 6. Commodities & Alternatives
+    # Include:
+    # - Investment Option
+    # - Expected Return (%)
+    # - Risk Level
+    # - Monthly Contribution (optional)
+    # - Maturity Value ({goal_amount})
+    # - Notes on liquidity and characteristics
 
-    #### 6. Goal Feasibility
+    #### 7. Goal Feasibility
     Assess if the current monthly contribution can achieve the goal amount over tenure.
     Provide a simple eloboration of the result (including {goal_amount}, {tenure} and {req_return}) with involving below terms:
     - "Feasible"

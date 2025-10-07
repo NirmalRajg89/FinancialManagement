@@ -6,6 +6,7 @@ import streamlit as st
 from controllers.agent_controller_v1 import create_investment_summary_v1
 from controllers.financial_advice_agent import create_financial_advice_agent
 
+
 def make_json_safe(obj):
     """Recursively convert DataFrames to Markdown or dicts."""
     if isinstance(obj, pd.DataFrame):

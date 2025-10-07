@@ -17,9 +17,9 @@ def portfolio_optimizer_agent(static_vars: dict):
         - funds (dict of fund_name -> expected_return)
     """
     funds = {
-        "Bank Savings Account": 0.035,
-        "Recurring Deposit": 0.06,
-        "Public Provident Fund": 0.075,
+        # "Bank Savings Account": 0.035,
+        # "Recurring Deposit": 0.06,
+        # "Public Provident Fund": 0.075,
         "Equity Mutual Funds": 0.10,
         "Index Funds": 0.125,
         "Stock Market": 0.175
@@ -52,7 +52,7 @@ def portfolio_optimizer_agent(static_vars: dict):
         monthsCount=tenure_num,
         goal=goal_amount,
         funds=funds,
-        top_n=2
+        top_n=4
     )
 
         # --- 3. Convert to JSON-safe dict for LLM ---
@@ -82,7 +82,7 @@ Notes:
 - Show weights as percentages with % symbol.
 - Include a table header.
 - Keep it concise and professional.
-- Explain clearly what exactly it is in theoretical manner.
+- Show {top_allocations} in a tabular format.
 """
     # Convert allocations to simple readable string
     if result_dict["top_allocations"]:

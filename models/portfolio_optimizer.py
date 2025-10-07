@@ -1,6 +1,9 @@
 import itertools
 import pandas as pd
 
+import pandas as pd
+import itertools
+
 
 def portfolio_optimizer(monthly_contribution, monthsCount, goal, funds, top_n=2):
     """
@@ -8,7 +11,7 @@ def portfolio_optimizer(monthly_contribution, monthsCount, goal, funds, top_n=2)
 
     Args:
         monthly_contribution (float): Amount contributed per month.
-        years (float): Investment horizon in years.
+        monthsCount (int): Investment horizon in months.
         goal (float): Target future value.
         funds (dict): Dict of fund_name -> expected annual return (decimal).
         top_n (int): Number of top results to return.
@@ -103,13 +106,19 @@ def portfolio_optimizer(monthly_contribution, monthsCount, goal, funds, top_n=2)
                 continue
             weights = alloc
             r_port = sum(weights[name] * funds[name] for name in weights)
-            fv = fv_of_annuity(monthly_contribution, r_port, months)
+            fv_total = fv_of_annuity(monthly_contribution, r_port, months)
+
+            # Compute individual fund FVs
+            fv_per_fund = {name: fv_of_annuity(monthly_contribution * w, funds[name], months)
+                           for name, w in weights.items()}
+
             conc = max(weights.values())
             results.append({
                 "combination": ", ".join(weights.keys()),
                 "weights": weights,
                 "portfolio_return_%": r_port * 100,
-                "fv_at_return": fv,
+                "fv_at_return": fv_total,
+                "fv_per_fund": fv_per_fund,
                 "concentration_max_weight": conc
             })
 
@@ -123,23 +132,27 @@ def portfolio_optimizer(monthly_contribution, monthsCount, goal, funds, top_n=2)
         for combo, r_max in alt_sorted[:8]:
             best_name = max(combo, key=lambda x: x[1])[0]
             weights = {name: (1.0 if name == best_name else 0.0) for name, _ in combo}
-            fv = fv_of_annuity(monthly_contribution, r_max, months)
+            fv_total = fv_of_annuity(monthly_contribution, r_max, months)
+            fv_per_fund = {name: fv_total if name == best_name else 0.0 for name in weights}
             results.append({
                 "combination": ", ".join([c[0] for c in combo]),
                 "weights": weights,
                 "portfolio_return_%": r_max * 100,
-                "fv_at_return": fv,
+                "fv_at_return": fv_total,
+                "fv_per_fund": fv_per_fund,
                 "concentration_max_weight": 1.0
             })
 
     # --- Prepare DataFrame ---
     rows = []
     for r in results:
+        fv_fund_str = "; ".join([f"{name}: ${fv:,.0f}" for name, fv in r["fv_per_fund"].items()])
         rows.append({
             "Combination": r["combination"],
             "Weights": "; ".join([f"{name}: {w * 100:.1f}%" for name, w in r["weights"].items()]),
             "Portfolio return (%)": round(r["portfolio_return_%"], 4),
             "FV at return ($)": f"${r['fv_at_return']:,.0f}",
+            "FV per fund ($)": fv_fund_str,
             "Max weight": round(r["concentration_max_weight"], 3)
         })
 

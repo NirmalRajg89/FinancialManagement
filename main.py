@@ -499,12 +499,12 @@ def main():
 
             default_long_term_values = {
                 "Retirement": {
-                    "tenure": 20,
+                    "tenure": 15,
                     "goal_amount": 1000000
                 },
                 "Home": {
                     "tenure": 15,
-                    "goal_amount": 450000
+                    "goal_amount": 1000000
                 }
             }
 
@@ -523,7 +523,7 @@ def main():
                         low = mid
                     else:
                         high = mid
-                return mid * 100  # return in %
+                return int(mid * 100)  # return in %
 
             # risk_level = user_profile.get("riskTolerance", "Moderate")
 
@@ -656,12 +656,73 @@ def main():
             - Index Funds (10–15%)
             - Stock Market (15–20%)
             """
+
+            investment_advisory_options = """
+                        - Equity Mutual Funds (8–12%)
+                        - Index Funds (10–15%)
+                        - Stock Market (15–20%)
+            """
+
             allocation = get_dynamic_allocation(risk_level, monthly_contribution)
             formatted_table = format_allocation_table(allocation, monthly_contribution)
             # goal_duration = calculate_goal_duration(monthly_contribution,goal_amount)
             monthly_contribution_investment = calculate_monthly_contribution(goal_amount, tenure, plan_type, monthly_contribution)
             #print(goal_duration)
             #print(monthly_contribution_investment)
+
+            funds_data = {
+                "Equity Mutual Funds": {
+                    "Canara Robeco Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Mirae Asset Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Parag Parikh Flexi Cap Fund": {"return": 0.11, "category": "Flexi Cap", "risk": "Moderate"},
+                    "HDFC Flexi Cap Fund": {"return": 0.10, "category": "Flexi Cap", "risk": "Moderate"},
+                    "Axis Midcap Fund": {"return": 0.12, "category": "Mid Cap", "risk": "High"},
+                    "Kotak Mid Cap Fund": {"return": 0.11, "category": "Mid Cap", "risk": "High"},
+                    "SBI Small Cap Fund": {"return": 0.13, "category": "Small Cap", "risk": "Very High"},
+                    "Mirae Asset Aggressive Hybrid Fund": {"return": 0.10, "category": "Hybrid", "risk": "Moderate"}
+                },
+                "Index Funds": {
+                    "Motilal Oswal Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                  "risk": "High"},
+                    "Aditya Birla Sun Life Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                          "risk": "High"},
+                    "Axis Nifty Smallcap 50 Index Fund": {"return": 0.15, "category": "Small Cap Index",
+                                                          "risk": "Very High"},
+                    "Motilal Oswal Nifty Smallcap 250 Index Fund": {"return": 0.14, "category": "Small Cap Index",
+                                                                    "risk": "Very High"},
+                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
+                                                                    "risk": "Moderate"}
+                },
+                "stocks":{"Pharmaceutical Stocks": {
+                    "Expected Return": 0.16, "stocks":{"Sun Pharmaceutical Industries": {"return": 0.15, "sector": "Pharma", "risk": "Moderate"},
+                    "Cipla": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"},
+                    "Dr Reddy's Laboratories": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Zydus Lifesciences": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Divi's Laboratories": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"}}
+                },
+                "EV Stocks": {
+                    "Expected Return": 0.18,
+                    "stocks": {
+                    "Tata Motors": {"return": 0.16, "sector": "EV", "risk": "High"},
+                    "Maruti Suzuki India": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "Bajaj Auto": {"return": 0.14, "sector": "EV", "risk": "High"},
+                    "Mahindra & Mahindra": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "TVS Motor Company": {"return": 0.13, "sector": "EV", "risk": "High"}
+                }
+                },
+                "Green Energy Stocks": {
+                    "Expected Return": 0.15,
+                    "stocks":{
+                    "Adani Green Energy": {"return": 0.15, "sector": "Green Energy", "risk": "High"},
+                    "NTPC": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Power Grid Corporation of India": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"},
+                    "Tata Power": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Indian Oil Corporation": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"}
+                }
+                }}
+            }
+
+
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
                 "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
@@ -688,7 +749,10 @@ def main():
                 "liabilities": liabilities,
                 "req_return":req_return,
                 "risk_as_per_tenure_and_goal":base_risk,
-                "cash_reserves": cash_reserves
+                "cash_reserves": cash_reserves,
+                "funds_data": funds_data,
+                "investment_advisory_options": investment_advisory_options,
+                "tenure_months": tenure if plan_type == "Short-term" else tenure*12
             }
             st.session_state.static_vars = static_vars
             # Step 4: Generate Plan
