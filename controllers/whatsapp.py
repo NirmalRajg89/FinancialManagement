@@ -22,9 +22,9 @@ def send_whatsapp_template_message( summary: str = "Message test",recipient_numb
         "recipient_type": "individual",
         "type": "template",
         "template": {
-            "name": "reminder_template",  # Your template name
+            "name": "summary",  # Your template name
             "language": {
-                "code": "en_US"
+                "code": "en"
             },
             "components": [
                 {
@@ -45,26 +45,6 @@ def send_whatsapp_template_message( summary: str = "Message test",recipient_numb
                             "type": "text",
                             "parameter_name": "summary",  # Passing the summary here
                             "text": summary
-                        },
-                        {
-                            "type": "text",
-                            "parameter_name": "name",
-                            "text": "Jeyaseelan"
-                        },
-                        {
-                            "type": "text",
-                            "parameter_name": "doc_name",
-                            "text": "Nirmal Raj"
-                        },
-                        {
-                            "type": "text",
-                            "parameter_name": "date",
-                            "text": "1st Jan 2025"
-                        },
-                        {
-                            "type": "text",
-                            "parameter_name": "time",
-                            "text": "5PM"
                         }
                     ]
                 }
@@ -74,6 +54,7 @@ def send_whatsapp_template_message( summary: str = "Message test",recipient_numb
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(message_data))
+        print(response)
         if response.status_code == 200:
             print("Message sent successfully!")
         else:
@@ -86,7 +67,7 @@ def send_whatsapp_template_message( summary: str = "Message test",recipient_numb
 if __name__ == "__main__":
 
     # Example data
-    recipient_number = "+9190"  # Recipient's phone number
+    recipient_number = "9840116889"  # Recipient's phone number
     summary = "Your document (Nirmal Raj) is scheduled for 1st Jan 2025 at 5 PM."
 
-    send_whatsapp_template_message( recipient_number, summary)
+    send_whatsapp_template_message(summary,recipient_number)
