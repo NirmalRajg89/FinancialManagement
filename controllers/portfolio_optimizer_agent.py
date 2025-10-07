@@ -27,7 +27,7 @@ def portfolio_optimizer_agent(static_vars: dict):
 
     # --- 1. Sanitize numeric inputs ---
     plan_type = static_vars.get("plan_type", "long_term")
-    tenure_for_optimizer = static_vars.get("tenure_for_optimizer")
+    tenure_for_optimizer = static_vars.get("tenure_for_optimizer_function")
     monthly_c_raw = static_vars.get("monthly_contribution", 1500)
     try:
         monthly_contribution = float(monthly_c_raw)

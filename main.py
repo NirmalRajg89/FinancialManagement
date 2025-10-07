@@ -14,6 +14,7 @@ from controllers.beginner_friendly_controller import get_simple_stock_data, get_
 import time
 
 from controllers.router_graph import app
+from controllers.run_investment_agent import run_investment_agent
 from controllers.utils import format_tenure, get_tolerance_v1
 from controllers.voice_controller import speak_risk_tolerance_summary, speak_investment_plan_summary
 
@@ -367,30 +368,40 @@ def main():
             employment = user_profile["employment"]
             assets = user_profile["assets"]
             liabilities = user_profile["liabilities"]
-            debt_monthly_payment = {l["name"]: l["monthlyPaymentAmount"] for l in liabilities}
+            debt_monthly_payment = {l["holderName"]: l["monthlyPaymentAmount"] for l in liabilities}
             debt_payment_str = {
-                l["name"].title(): f"Monthly Payment: ${l['monthlyPaymentAmount']}, Tenure: {format_tenure(l.get('termMonths'))}"
+                l["holderName"].title(): f"Type: ${l['liabilityType']}, Monthly Payment: ${l['monthlyPaymentAmount']},Unpaid Balance: ${l['unpaidBalanceAmount']}, Tenure: {format_tenure(l.get('termMonths'))}"
                 for l in liabilities
+            }
+            assets_str = {
+                l["holderName"].title(): f"Asset Type: ${l['assetType']}, Category: ${l['assetCategory']}, Value: ${l['currentValue']}"
+                for l in assets
             }
 
             monthlyPaymentAmount = sum(l["monthlyPaymentAmount"] for l in liabilities)
             total_liabilities = sum(l["unpaidBalanceAmount"] for l in liabilities)
-            savings = sum(a["total"] for a in assets)
-            total_assets = sum(a["total"] for a in assets)
-            cash_reserves = sum(a["total"] for a in assets if a["assetType"] in ["CheckingAccount", "SavingsAccount"])
+            savings = sum(a["currentValue"] for a in assets)
+            total_assets = sum(a["currentValue"] for a in assets)
+            emergency_fund_amount = sum(
+                asset['total']
+                for asset in assets
+                if asset.get('assetType') == 'EmergencyFund'
+            )
+            cash_reserves = sum(asset['currentValue'] for asset in assets if asset.get('assetCategory') == 'Liquid' and asset.get('assetType') != 'EmergencyFund')
+
             Debt_to_Income_Ratio = round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
             summary_data = {
                 "Monthly Income ($)": [employment["monthlyIncomeAmount"]],
                 "Credit Score": [employment["creditScore"]],
               
-                "Saving - Liquid Fund ($)": savings,
+                "Saving - Liquid Fund ($)": cash_reserves,
                 "Total Liabilities ($)": total_liabilities,
                 "Monthly Debt Payments ($)": [monthlyPaymentAmount],
                 "Debt-to-Income Ratio (%)": [
                     round((monthlyPaymentAmount / employment["monthlyIncomeAmount"]) * 100, 2)
                 ],
             }
-            has_house_asset = any(asset.get("type") == "house" for asset in user_profile.get("assets", []))
+            has_house_asset = any(asset.get("assetType") == "home" for asset in user_profile.get("assets", []))
             df = pd.DataFrame(summary_data)
             
             # Add emoji indicators for the current DataFrame structure
@@ -416,6 +427,11 @@ def main():
             df_with_indicators = add_indicators(df)
             st.table(df_with_indicators)
             # ---- Debt Details Tooltip in Expander ---- #
+
+            with st.expander("View Total Assets Detail"):
+                st.write("#### Total Assets Details")
+                for name, detail in assets_str.items():
+                    st.markdown(f"- **{name}**: {detail}")
 
             with st.expander("ℹ️ View Total Liabilities Detail"):
                 st.write("#### Total Liabilities Details")
@@ -535,7 +551,6 @@ def main():
                 }
             }
 
-            base_risk = "Unknown"
             risk_level = "Unknown"
             info = {
                 "color": "#95a5a6",
@@ -557,7 +572,7 @@ def main():
                     goal_amount = st.number_input(
                         "Expected Goal Amount($)",
                         min_value=1000.0,
-                        max_value=1_00_00_000.0,
+                        max_value=10000000.0,
                         step=1000.0,
                         value=float(default_values[goals]['goal_amount'])
                     )
@@ -587,20 +602,20 @@ def main():
                     goal_amount = st.number_input(
                         "Expected Goal Amount($)",
                         min_value=1000.0,
-                        max_value=5_00_00_000.0,
+                        max_value=50000000.0,
                         step=10000.0,
                         value=float(default_long_term_values[goals]['goal_amount'])
                     )
-
+            goal_amount = goal_amount - cash_reserves if emergency_fund_amount > disposable_income else goal_amount
             # Required annual return
-            req_return = required_return(monthly_contribution, goal_amount, 12, tenure)
+            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "short-term" else tenure)
 
             # Map to risk profile
             if req_return <= 7:
                 base_risk = "Low"
-            elif req_return <= 12:
+            elif req_return <= 10:
                 base_risk = "Moderate"
-            elif req_return <= 16:
+            elif req_return <= 15:
                 base_risk = "High"
             elif req_return <= 20:
                 base_risk = "Very High"
@@ -609,8 +624,9 @@ def main():
 
             info = risk_info.get(base_risk, info)
 
-            st.text(f""" Safer monthly contribution with tolerance of {income_risk_tolerance*100}%: {monthly_contribution}, Max monthly income after debts:{disposable_income} """)
-
+            st.text(f"""Note: Your maximum available monthly income after debts is ${disposable_income:,}. Based on your risk tolerance, a safer monthly contribution is ${monthly_contribution:,} """)
+            st.text(
+                f"""Aiming for a required return of {req_return}%""")
             st.markdown(
                 f"""
                 <div style="
@@ -643,7 +659,7 @@ def main():
             allocation = get_dynamic_allocation(risk_level, monthly_contribution)
             formatted_table = format_allocation_table(allocation, monthly_contribution)
             # goal_duration = calculate_goal_duration(monthly_contribution,goal_amount)
-            monthly_contribution_investment = calculate_monthly_contribution(goal_amount, tenure, plan_type)
+            monthly_contribution_investment = calculate_monthly_contribution(goal_amount, tenure, plan_type, monthly_contribution)
             #print(goal_duration)
             #print(monthly_contribution_investment)
             static_vars = {
@@ -667,11 +683,16 @@ def main():
                 "goal_feasibility": "",
                 "has_house_asset":has_house_asset,
                 "plan_type":plan_type,
-                "tenure_for_optimizer": int(tenure)
+                "tenure_for_optimizer_function": int(tenure),
+                "assets": assets,
+                "liabilities": liabilities,
+                "req_return":req_return,
+                "risk_as_per_tenure_and_goal":base_risk,
+                "cash_reserves": cash_reserves
             }
             st.session_state.static_vars = static_vars
             # Step 4: Generate Plan
-            if goals and monthly_contribution:
+            if goals:
                 if st.button("Generate Investment Plan"):
                     with st.spinner("Getting expert advice..."):
                         st.session_state.investment_input_data = {
@@ -688,42 +709,22 @@ def main():
                             }
                         }
                         # Create agent
-                        st.session_state.agent = create_investment_summary_v1(static_vars)
-
-                        plan_prompt = {
-                            "profile": user_profile,
-                            "user_inputs": st.session_state.investment_input_data["user_inputs"],
-                            "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
-                            "monthly_contribution": monthly_contribution,
-                            "goal_amount": goal_amount,
-                            "risk_tolerance": risk_level,
-                            "investment_options": investment_options,
-                            "question": "Generate a detailed investment plan based on the above.",
-                            # **static_vars,
-                        }
-
-                        user_msg = f"Generate {plan_type} plan — goals: {goals}, risk: {risk_level}, tenure: {tenure} {'months' if plan_type == 'Short-term' else 'years'}, Goal to achieve: {goal_amount}"
-                        st.session_state.chat_history.append({"role": "user", "content": user_msg})
-
-                        full_response = ""
-                        response = st.session_state.agent.ask(plan_prompt)
-
-                        response_placeholder = st.empty()
-
-                        for char in response:
-                            full_response += char
-                            response_placeholder.markdown(full_response + "▌")
-                            time.sleep(0.001)
-
-                        # Add loan recommendation if needed
-                        #if req_return and plan_type == "Long-term":
-                        #    loan_summary = create_loan_summary(goal_amount, cash_reserves, tenure, req_return)
-                        #    full_response += "\n\n" + loan_summary
+                        full_response = run_investment_agent(
+                            static_vars=static_vars,
+                            user_profile=user_profile,
+                            plan_type=plan_type,
+                            goals=goals,
+                            risk_level=risk_level,
+                            tenure=tenure,
+                            goal_amount=goal_amount,
+                            investment_options=investment_options,
+                            monthly_contribution=monthly_contribution
+                        )
 
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
-                        response_placeholder.empty()
-                        
+
+                        # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
                         # speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 

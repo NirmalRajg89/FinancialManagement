@@ -1,287 +1,194 @@
-
-  {
-    "Amanda":{
-      "riskTolerance": "Moderate",
+{
+  "Chris": {
+    "riskTolerance": "Low",
     "employment": {
-      "altId": "1e4c45a2-d9a2-4f64-91a2-709fefb7a001",
-      "sourceOfIncomeData": "Encompass",
-      "noLinkToDocTrackIndicator": true,
-      "startDate": "2018-03-15T00:00:00Z",
-      "currentEmploymentIndicator": true,
-      "addressState": "CA",
-      "addressStreetLine1": "123 Tech Park",
-      "addressCity": "Los Angeles",
-      "employmentStartDate": "2018-03-15T00:00:00Z",
-      "id": "Employment/0",
-      "employerName": "Amanda",
-      "selfEmployedIndicator": false,
-      "positionDescription": "Software Engineer",
-      "basePayAmount": 8333.33,
-      "unitType": "Office",
-      "monthlyIncomeAmount": 8500,
-      "owner": "Borrower",
-      "titlePhone": "555-123-4567",
-      "creditScore": 745
-    },
-    "assets": [
-      {
-        "altId": "_1001",
-        "accountIdentifier": "1122",
-        "vodIndex": 1,
-        "sourceOfAssetData": "Encompass",
-        "depositoryAccountGuid": "a12e1b11-9988-4e02-a3f9-0012aa345678",
-        "noLinkToDocTrackIndicator": true,
-        "urla2020CashOrMarketValueAmount": 15000,
-        "assetType": "CheckingAccount",
-        "total": 15000.0,
-        "isVod": true,
-        "id": "Asset/18",
-        "assetIndex": 18,
-        "holderName": "Bank of California",
-        "includeInAusExport": true,
-        "owner": "Borrower"
-      }
-    ],
-    "liabilities": [
-      {
-        "name": "Home loan",
-        "monthlyPaymentAmount": 2000,
-        "termMonths": 250,
-        "liabilityType": "Mortgage",
-        "unpaidBalanceAmount": 415000,
-        "owner": "Borrower"
-      },
-      {
-        "name": "car loan",
-        "monthlyPaymentAmount": 500,
-        "termMonths": 60,
-        "unpaidBalanceAmount": 30000,
-        "liabilityType": "Auto Loan",
-        "owner": "Borrower"
-      },
-      {
-        "name": "Credit card",
-        "monthlyPaymentAmount": 200,
-        "unpaidBalanceAmount": 1500,
-        "liabilityType": "Revolving",
-        "owner": "Borrower"
-      }
-    ]
-  },
-  "Brad":{
-     "riskTolerance": "Low",
-    "employment": {
-      "altId": "2f0a28e9-23df-4936-939b-9dd84a6c2ac7",
-      "sourceOfIncomeData": "Encompass",
-      "noLinkToDocTrackIndicator": true,
-      "startDate": "2020-01-01T00:00:00Z",
-      "currentEmploymentIndicator": true,
-      "addressState": "TX",
-      "addressStreetLine1": "456 Finance St",
-      "addressCity": "Austin",
-      "employmentStartDate": "2020-01-01T00:00:00Z",
-      "id": "Employment/1",
-      "employerName": "Brad",
-      "selfEmployedIndicator": false,
-      "positionDescription": "Accountant",
-      "basePayAmount": 8750.00,
-      "unitType": "Office",
-      "monthlyIncomeAmount": 8750,
-      "owner": "Borrower",
-      "titlePhone": "512-456-7890",
-      "creditScore": 540
-    },
-    "assets": [
-      {
-        "altId": "_2001",
-        "accountIdentifier": "3344",
-        "vodIndex": 1,
-        "sourceOfAssetData": "Encompass",
-        "depositoryAccountGuid": "b22b2b22-aaa1-4dd2-aaa3-2a3a3a3a3a3a",
-        "noLinkToDocTrackIndicator": true,
-        "urla2020CashOrMarketValueAmount": 12000,
-        "assetType": "CheckingAccount",
-        "total": 12000,
-        "isVod": true,
-        "id": "Asset/19",
-        "assetIndex": 19,
-        "holderName": "Capital One",
-        "includeInAusExport": true,
-        "owner": "Borrower"
-      }
-    ],
-    "liabilities": [
-      {
-        "name": "Mastercard",
-        "volIndex": 7,
-        "accountIdentifier": "877755",
-        "liabilityIndex": 9,
-        "payoffStatusIndicator": false,
-        "payoffIncludedIndicator": false,
-        "accountIndicator": true,
-        "noLinkToDocTrackIndicator": true,
-        "uCDPayoffType": "",
-        "creditLimit": 4000,
-        "monthlyPaymentAmount": 60,
-        "nameInAccount": "James Brown",
-        "includeTaxesAndInsuranceIndicator": false,
-        "requestId": "b7c2d2e2-2222-4f55-aaaa-2d3d3e3e3e3e",
-        "unpaidBalanceAmount": 3500,
-        "id": "Liability/9",
-        "liabilityType": "Revolving",
-        "holderName": "Mastercard",
-        "owner": "Borrower"
-      }
-    ]
-  },
-  "Chris":{
-     "riskTolerance": "low",
-    "employment": {
-      "altId": "3c8e0d78-0b33-4a9e-bc12-3f534646f9d3",
-      "sourceOfIncomeData": "Encompass",
-      "noLinkToDocTrackIndicator": true,
-      "startDate": "2022-05-01T00:00:00Z",
-      "currentEmploymentIndicator": true,
-      "addressState": "MI",
-      "addressStreetLine1": "789 Budget Ln",
-      "addressCity": "Detroit",
-      "employmentStartDate": "2022-05-01T00:00:00Z",
-      "id": "Employment/2",
-      "employerName": "Chris",
-      "selfEmployedIndicator": false,
       "positionDescription": "Laborer",
-      "basePayAmount": 1666.66,
-      "unitType": "Unit",
-      "monthlyIncomeAmount": 1650,
-      "owner": "Borrower",
-      "titlePhone": "313-111-2222",
-      "creditScore": 400
+      "monthlyIncomeAmount": 2000,
+      "annualIncome": 24000,
+      "creditScore": 410,
+      "employerName": "Chris Manufacturing LLC",
+      "addressCity": "Detroit",
+      "addressState": "MI",
+      "startDate": "2022-05-01T00:00:00Z"
     },
     "assets": [
       {
-        "altId": "_3001",
-        "accountIdentifier": "4455",
-        "vodIndex": 1,
-        "sourceOfAssetData": "Encompass",
-        "depositoryAccountGuid": "c33c3c33-3333-4cc4-ccc4-3c3c3c3c3c3c",
-        "noLinkToDocTrackIndicator": true,
-        "urla2020CashOrMarketValueAmount": 200,
-        "assetType": "CheckingAccount",
-        "total": 200,
-        "isVod": true,
-        "id": "Asset/20",
-        "assetIndex": 20,
+        "assetType": "Checking Account",
+        "assetCategory": "Liquid",
         "holderName": "Metro Bank",
-        "includeInAusExport": true,
-        "owner": "Borrower"
+        "currentValue": 500
+      },
+      {
+        "assetType": "Used Car",
+        "assetCategory": "Non-Liquid",
+        "holderName": "Personal",
+        "currentValue": 3000
       }
     ],
     "liabilities": [
       {
-        "name": "Loan Shark Inc",
-        "volIndex": 8,
-        "accountIdentifier": "999111",
-        "liabilityIndex": 10,
-        "payoffStatusIndicator": false,
-        "payoffIncludedIndicator": false,
-        "accountIndicator": true,
-        "noLinkToDocTrackIndicator": true,
-        "uCDPayoffType": "",
-        "creditLimit": 1000,
-        "monthlyPaymentAmount": 150,
-        "nameInAccount": "Tom Low",
-        "includeTaxesAndInsuranceIndicator": false,
-        "requestId": "d7e3f3g3-3333-4g66-aaaa-3f4f4f4f4f4f",
+        "liabilityType": "Personal Loan",
+        "holderName": "Loan Shark Inc.",
         "unpaidBalanceAmount": 5000,
-        "id": "Liability/10",
-        "liabilityType": "Installment",
-        "holderName": "Loan Shark Inc",
-        "owner": "Borrower"
+        "monthlyPaymentAmount": 150,
+        "termMonths": 48
+      },
+      {
+        "liabilityType": "Credit Card",
+        "holderName": "Discover",
+        "unpaidBalanceAmount": 1000,
+        "monthlyPaymentAmount": 50
       }
     ]
   },
-  "David":{
-    "riskTolerance": "High",
-  "employment": {
-    "altId": "4d22fe41-8e41-47ff-9a17-0911f63b5b88",
-    "sourceOfIncomeData": "Encompass",
-    "noLinkToDocTrackIndicator": true,
-    "startDate": "2010-07-01T00:00:00Z",
-    "currentEmploymentIndicator": true,
-    "addressState": "NY",
-    "addressStreetLine1": "1 Wall Street",
-    "addressCity": "New York",
-    "employmentStartDate": "2010-07-01T00:00:00Z",
-    "id": "Employment/3",
-    "employerName": "Global Holdings Inc.",
-    "selfEmployedIndicator": true,
-    "positionDescription": "CEO",
-    "basePayAmount": 50000.00,
-    "unitType": "Penthouse",
-    "monthlyIncomeAmount": 50000,
-    "owner": "Borrower",
-    "titlePhone": "212-888-8888",
-    "creditScore": 840
-  },
-  "assets": [
-    {
-      "altId": "_4001",
-      "accountIdentifier": "9988",
-      "vodIndex": 1,
-      "sourceOfAssetData": "Encompass",
-      "depositoryAccountGuid": "d44d4d44-4444-4dd4-ddd4-4d4d4d4d4d4d",
-      "noLinkToDocTrackIndicator": true,
-      "urla2020CashOrMarketValueAmount": 250000,
-      "assetType": "InvestmentAccount",
-      "total": 250000,
-      "isVod": true,
-      "id": "Asset/21",
-      "assetIndex": 21,
-      "holderName": "Goldman Sachs",
-      "includeInAusExport": true,
-      "owner": "Borrower"
+
+  "Brad": {
+    "riskTolerance": "Moderate",
+    "employment": {
+      "positionDescription": "Accountant",
+      "monthlyIncomeAmount": 7500,
+      "annualIncome": 84000,
+      "creditScore": 610,
+      "employerName": "Finance Solutions Inc.",
+      "addressCity": "Austin",
+      "addressState": "TX",
+      "startDate": "2020-01-01T00:00:00Z"
     },
-    {
-      "altId": "_4002",
-      "accountIdentifier": "8877",
-      "vodIndex": 2,
-      "sourceOfAssetData": "Encompass",
-      "depositoryAccountGuid": "e55e5e55-5555-4ee5-eeee-5e5e5e5e5e5e",
-      "noLinkToDocTrackIndicator": true,
-      "urla2020CashOrMarketValueAmount": 75000,
-      "assetType": "SavingsAccount",
-      "total": 75000,
-      "isVod": true,
-      "id": "Asset/22",
-      "assetIndex": 22,
-      "holderName": "Chase Private Client",
-      "includeInAusExport": true,
-      "owner": "Borrower"
-    }
-  ],
-  "liabilities": [
-    {
-      "volIndex": 9,
-      "accountIdentifier": "776655",
-      "liabilityIndex": 11,
-      "payoffStatusIndicator": false,
-      "payoffIncludedIndicator": false,
-      "accountIndicator": true,
-      "noLinkToDocTrackIndicator": true,
-      "uCDPayoffType": "",
-      "creditLimit": 20000,
-      "monthlyPaymentAmount": 300,
-      "nameInAccount": "Wealthy Client",
-      "includeTaxesAndInsuranceIndicator": false,
-      "requestId": "f8g4h4i4-4444-4h77-aaaa-4g5g5g5g5g5g",
-      "unpaidBalanceAmount": 1500,
-      "id": "Liability/11",
-      "liabilityType": "Revolving",
-      "holderName": "AMEX Platinum",
-      "owner": "Borrower"
-    }
-  ]
-}
+    "assets": [
+      {
+        "assetType": "Checking Account",
+        "assetCategory": "Liquid",
+        "holderName": "Capital One",
+        "currentValue": 10000
+      },
+      {
+        "assetType": "401K Retirement Fund",
+        "assetCategory": "Non-Liquid",
+        "holderName": "Fidelity",
+        "currentValue": 25000
+      }
+    ],
+    "liabilities": [
+      {
+        "liabilityType": "Car Loan",
+        "holderName": "Toyota Finance",
+        "unpaidBalanceAmount": 15000,
+        "monthlyPaymentAmount": 400,
+        "termMonths": 36
+      },
+      {
+        "liabilityType": "Credit Card",
+        "holderName": "Mastercard",
+        "unpaidBalanceAmount": 3000,
+        "monthlyPaymentAmount": 75
+      }
+    ]
+  },
+
+  "Amanda": {
+    "riskTolerance": "Moderate-High",
+    "employment": {
+      "positionDescription": "Software Engineer",
+      "monthlyIncomeAmount": 12000,
+      "annualIncome": 144000,
+      "creditScore": 750,
+      "employerName": "Tech Innovations LLC",
+      "addressCity": "Los Angeles",
+      "addressState": "CA",
+      "startDate": "2018-03-15T00:00:00Z"
+    },
+    "assets": [
+      {
+        "assetType": "Checking Account",
+        "assetCategory": "Liquid",
+        "holderName": "Bank of California",
+        "currentValue": 20000
+      },
+      {
+        "assetType": "Home",
+        "assetCategory": "Non-Liquid",
+        "holderName": "Self-Owned",
+        "currentValue": 550000,
+        "hasMortgage": true
+      },
+      {
+        "assetType": "Stock Investments",
+        "assetCategory": "Liquid",
+        "holderName": "Robinhood",
+        "currentValue": 25000
+      }
+    ],
+    "liabilities": [
+      {
+        "liabilityType": "Mortgage",
+        "holderName": "Bank of California",
+        "unpaidBalanceAmount": 400000,
+        "monthlyPaymentAmount": 2500,
+        "termMonths": 300
+      },
+      {
+        "liabilityType": "Auto Loan",
+        "holderName": "Honda Finance",
+        "unpaidBalanceAmount": 20000,
+        "monthlyPaymentAmount": 450,
+        "termMonths": 48
+      },
+      {
+        "liabilityType": "Credit Card",
+        "holderName": "Amex Gold",
+        "unpaidBalanceAmount": 2500,
+        "monthlyPaymentAmount": 100
+      }
+    ]
+  },
+
+  "David": {
+    "riskTolerance": "High",
+    "employment": {
+      "positionDescription": "CEO",
+      "monthlyIncomeAmount": 50000,
+      "annualIncome": 600000,
+      "creditScore": 840,
+      "employerName": "Global Holdings Inc.",
+      "addressCity": "New York",
+      "addressState": "NY",
+      "startDate": "2010-07-01T00:00:00Z"
+    },
+    "assets": [
+      {
+        "assetType": "Investment Portfolio",
+        "assetCategory": "Liquid",
+        "holderName": "Goldman Sachs",
+        "currentValue": 500000
+      },
+      {
+        "assetType": "Vacation Property",
+        "assetCategory": "Non-Liquid",
+        "holderName": "Self-Owned",
+        "currentValue": 750000,
+        "hasMortgage": false
+      },
+      {
+        "assetType": "Savings Account",
+        "assetCategory": "Liquid",
+        "holderName": "Chase Private Client",
+        "currentValue": 100000
+      }
+    ],
+    "liabilities": [
+      {
+        "liabilityType": "Credit Card",
+        "holderName": "AMEX Platinum",
+        "unpaidBalanceAmount": 2000,
+        "monthlyPaymentAmount": 300
+      },
+      {
+        "liabilityType": "Investment Loan",
+        "holderName": "Private Bank NY",
+        "unpaidBalanceAmount": 50000,
+        "monthlyPaymentAmount": 2000,
+        "termMonths": 24
+      }
+    ]
   }
-
-
+}
