@@ -2,9 +2,9 @@ import pandas as pd
 
 def calc():
     # Given values
-    monthly_contribution = 466  # PMT
+    monthly_contribution = 1200  # PMT
     annual_interest_rate = 0.19  # 19%
-    years = 20
+    years = 11
     compounding_frequency = 12  # monthly
 
     # Derived values
