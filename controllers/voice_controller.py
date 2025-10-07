@@ -1,32 +1,53 @@
 import streamlit as st
 import speech_recognition as sr
-import pyttsx3
 import threading
 import time
 
 
 # ---------------------- VOICE UTILS ---------------------- #
 
-# Initialize text-to-speech engine
-engine = pyttsx3.init()
+# Text-to-speech may not be available in all environments (e.g., Streamlit Cloud, Python 3.13)
+# Lazy-initialize and fail open so the app doesn't crash when TTS isn't supported.
+_tts_engine = None
+_tts_tried_init = False
+
+def _init_tts_if_needed():
+    global _tts_engine, _tts_tried_init
+    if _tts_tried_init:
+        return
+    _tts_tried_init = True
+    try:
+        import pyttsx3  # Local import to avoid hard dependency at module import time
+        _tts_engine = pyttsx3.init()
+    except Exception as e:
+        # Surface a non-blocking warning and continue without TTS
+        _tts_engine = None
+        try:
+            st.info("Text-to-speech is unavailable in this environment.")
+        except Exception:
+            # If Streamlit isn't ready, silently ignore
+            pass
 
 def speak_text(text):
     """Speak the given text using text-to-speech with human-like settings"""
     try:
+        _init_tts_if_needed()
+        if _tts_engine is None:
+            return
+
         # Set voice properties for more human-like speech
-        engine.setProperty('rate', 180)  # Faster, more natural speed
-        engine.setProperty('volume', 0.9)  # Slightly louder for clarity
-        engine.setProperty('pitch', 0.1)  # Slightly higher pitch for warmth
+        _tts_engine.setProperty('rate', 180)  # Faster, more natural speed
+        _tts_engine.setProperty('volume', 0.9)  # Slightly louder for clarity
         
         # Get available voices and select the most human-like one
-        voices = engine.getProperty('voices')
+        voices = _tts_engine.getProperty('voices')
         if voices:
             # Prioritize voices that sound more human
             preferred_voices = ['samantha', 'alex', 'victoria', 'daniel', 'zira', 'female']
             for preferred in preferred_voices:
                 for voice in voices:
                     if preferred in voice.name.lower():
-                        engine.setProperty('voice', voice.id)
+                        _tts_engine.setProperty('voice', voice.id)
                         break
                 else:
                     continue
@@ -37,8 +58,8 @@ def speak_text(text):
         text = text.replace('!', '! ')  # Add slight pause after exclamations
         text = text.replace('?', '? ')  # Add slight pause after questions
         
-        engine.say(text)
-        engine.runAndWait()
+        _tts_engine.say(text)
+        _tts_engine.runAndWait()
     except Exception as e:
         st.error(f"Error with text-to-speech: {str(e)}")
 
