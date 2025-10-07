@@ -726,7 +726,7 @@ def main():
 
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
-                        speak_investment_plan_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
