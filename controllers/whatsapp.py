@@ -33,7 +33,7 @@ def send_whatsapp_template_message( summary: str = "Message test",recipient_numb
                         {
                             "type": "image",
                             "image": {
-                                "link": "https://www.shutterstock.com/image-photo/summary-heading-background-template-business-600w-328018895.jpg"
+                                "link": "https://t3.ftcdn.net/jpg/00/93/67/74/360_F_93677434_xaPPejliipFMA7YQHOAlm19KPIqgPB5C.jpg"
                             }
                         }
                     ]

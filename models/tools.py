@@ -32,6 +32,9 @@ def send_sms_tool(message: str, to_number: str) -> str:
 @tool
 def send_whatsapp_tool(message: str, to_number: str) -> str:
     """Send the message via WhatsApp to the given phone number."""
+    print(f"Sending message via WhatsApp to {to_number}")
+    print(f"Message: {message}")
+    print(f"Formatted message: {message}")
     send_whatsapp_template_message(message, to_number)
     return "Summary sent via WhatsApp."
 
