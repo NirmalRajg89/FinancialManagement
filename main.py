@@ -1,8 +1,16 @@
 import base64
 import json
+import io
+import re
 
 import pandas as pd
 import streamlit as st
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+import markdown
 from streamlit_option_menu import option_menu
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
@@ -28,6 +36,129 @@ def img_to_base64(image_path):
     except Exception as e:
         print(f"Error converting image to base64: {str(e)}")
         return None
+
+
+def create_pdf_from_markdown(content, filename="investment_report.pdf"):
+    """Create a PDF from markdown content with proper formatting."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    
+    # Create custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        textColor=colors.darkblue
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.darkblue
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=6
+    )
+    
+    # Build content
+    story = []
+    
+    # Add title
+    story.append(Paragraph("Investment Analysis Report", title_style))
+    story.append(Spacer(1, 12))
+    
+    # Process content line by line
+    lines = content.split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        if not line:
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+            
+        # Handle headers
+        if line.startswith('#'):
+            level = len(line) - len(line.lstrip('#'))
+            header_text = line.lstrip('# ').strip()
+            if level == 1:
+                story.append(Paragraph(header_text, title_style))
+            else:
+                story.append(Paragraph(header_text, heading_style))
+            story.append(Spacer(1, 12))
+            
+        # Handle tables (look for markdown table patterns)
+        elif '|' in line and line.count('|') >= 2:
+            table_lines = []
+            # Collect all table lines
+            while i < len(lines) and '|' in lines[i] and lines[i].count('|') >= 2:
+                table_line = lines[i].strip()
+                if not table_line.startswith('|---'):  # Skip separator lines
+                    table_lines.append(table_line)
+                i += 1
+            i -= 1  # Adjust for the loop increment
+            
+            if table_lines:
+                # Parse table
+                table_data = []
+                for table_line in table_lines:
+                    cells = [cell.strip() for cell in table_line.split('|')[1:-1]]  # Remove empty first/last
+                    table_data.append(cells)
+                
+                if table_data:
+                    # Create PDF table
+                    pdf_table = Table(table_data)
+                    pdf_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 10),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('FONTSIZE', (0, 1), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    story.append(pdf_table)
+                    story.append(Spacer(1, 12))
+        
+        # Handle bullet points
+        elif line.startswith('- ') or line.startswith('* '):
+            bullet_text = line[2:].strip()
+            story.append(Paragraph(f"• {bullet_text}", normal_style))
+            
+        # Handle numbered lists
+        elif re.match(r'^\d+\.', line):
+            story.append(Paragraph(line, normal_style))
+            
+        # Handle bold text
+        elif '**' in line:
+            # Simple bold text handling
+            formatted_line = line.replace('**', '<b>').replace('<b>', '<b>', 1).replace('<b>', '</b>', 1)
+            story.append(Paragraph(formatted_line, normal_style))
+            
+        # Regular text
+        else:
+            story.append(Paragraph(line, normal_style))
+        
+        i += 1
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 def extract_stock_symbol(search_query):
     """
@@ -359,14 +490,7 @@ def main():
         # Global stop button at top of page
         # render_mute_toggle()
         # Initialize mute state
-        if "mute_audio" not in st.session_state:
-            st.session_state["mute_audio"] = False
-
         # Mute/unmute toggle
-        if st.button("🔇"):
-            st.session_state["mute_audio"] = not st.session_state["mute_audio"]
-
-
         if user_name:
             if user_name not in all_user_data:
                 st.error(f"No data found for user: {user_name}")
@@ -754,9 +878,7 @@ def main():
 
 
                         # Extract investment table from the complete response and create visualizations
-                        print("full_response",full_response)
                         investment_table = extract_investment_table_from_response(full_response)
-                        print("investment_table",investment_table)
 
 
                         if investment_table:
@@ -769,6 +891,26 @@ def main():
 
                             # Display visualizations for the investment analysis
                             display_investment_visualizations(investment_table, goal_amount)
+                            
+                            # Append the visualization data to chat history
+                            st.session_state.chat_history.append({
+                                "role": "assistant",
+                                "type": "charts",
+                                "data": {
+                                    "investment_table": investment_table,
+                                    "goal_amount": goal_amount
+                                }
+                            })
+                            
+                            # # Instead of storing the chart itself, store the data needed to regenerate it
+                            # st.session_state.chat_history.append({
+                            #     "role": "assistant",
+                            #     "type": "charts",
+                            #     "data": {
+                            #         "investment_table": investment_table,
+                            #         "goal_amount": goal_amount
+                            #     }
+                            # })                        
                         else:
                             st.write("❌ **No Investment Table Found in Main**")
                             # Fallback: speak the general investment summary
@@ -776,14 +918,21 @@ def main():
 
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
-                        speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        # speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
                 st.subheader("💬 Investment Summary")
                 for msg in st.session_state.chat_history:
                     with st.chat_message(msg["role"]):
-                        st.markdown(msg["content"])
+                        if msg.get("type") == "charts":
+                            # Re-render the investment visualizations from stored data
+                            investment_table = msg["data"]["investment_table"]
+                            goal_amount = msg["data"]["goal_amount"]
+                            display_investment_visualizations(investment_table, goal_amount)
+                        else:
+                            st.markdown(msg["content"])
 
                 # Chat input for follow-ups
                 user_query = st.chat_input("Type your question and press Enter...")
