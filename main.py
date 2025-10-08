@@ -892,7 +892,8 @@ def main():
                 "cash_reserves": cash_reserves,
                 "funds_data": funds_data,
                 "investment_advisory_options": investment_advisory_options,
-                "tenure_months": tenure if plan_type == "Short-term" else tenure*12
+                "tenure_months": tenure if plan_type == "Short-term" else tenure*12,
+                "emergency_fund_amount": emergency_fund_amount
             }
             st.session_state.static_vars = static_vars
             # Step 4: Generate Plan
@@ -947,7 +948,7 @@ def main():
                         # Extract investment table from the complete response and create visualizations
                         investment_table = extract_investment_table_from_response(full_response)
 
-
+                        
                         if investment_table:
                             # st.write("✅ **Investment Table Found in Main!**")
                             # st.code(investment_table)
