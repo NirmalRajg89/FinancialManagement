@@ -664,7 +664,7 @@ def main():
                         low = mid
                     else:
                         high = mid
-                return mid * 100  # return in %
+                return round(mid * 100, 2)  # return in %
 
             # risk_level = user_profile.get("riskTolerance", "Moderate")
 
@@ -684,7 +684,7 @@ def main():
                 },
                 "Very High": {
                     "color": "#e74c3c",  # Red
-                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
+                    "meaning": "Aggressive investment needed, accepts high volatility for maximum returns"
                 },
                 "Unrealistic": {
                     "color": "#8e44ad",  # Purple
@@ -749,7 +749,7 @@ def main():
                     )
             goal_amount = goal_amount - cash_reserves if emergency_fund_amount > disposable_income else goal_amount
             # Required annual return
-            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "short-term" else tenure)
+            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "Short-term" else tenure)
 
             # Map to risk profile
             if req_return <= 7:
@@ -811,59 +811,6 @@ def main():
             monthly_contribution_investment = calculate_monthly_contribution(goal_amount, tenure, plan_type, monthly_contribution)
             #print(goal_duration)
             #print(monthly_contribution_investment)
-
-            funds_data = {
-                "Equity Mutual Funds": {
-                    "Canara Robeco Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
-                    "Mirae Asset Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
-                    "Parag Parikh Flexi Cap Fund": {"return": 0.11, "category": "Flexi Cap", "risk": "Moderate"},
-                    "HDFC Flexi Cap Fund": {"return": 0.10, "category": "Flexi Cap", "risk": "Moderate"},
-                    "Axis Midcap Fund": {"return": 0.12, "category": "Mid Cap", "risk": "High"},
-                    "Kotak Mid Cap Fund": {"return": 0.11, "category": "Mid Cap", "risk": "High"},
-                    "SBI Small Cap Fund": {"return": 0.13, "category": "Small Cap", "risk": "Very High"},
-                    "Mirae Asset Aggressive Hybrid Fund": {"return": 0.10, "category": "Hybrid", "risk": "Moderate"}
-                },
-                "Index Funds": {
-                    "Motilal Oswal Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
-                                                                  "risk": "High"},
-                    "Aditya Birla Sun Life Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
-                                                                          "risk": "High"},
-                    "Axis Nifty Smallcap 50 Index Fund": {"return": 0.15, "category": "Small Cap Index",
-                                                          "risk": "Very High"},
-                    "Motilal Oswal Nifty Smallcap 250 Index Fund": {"return": 0.14, "category": "Small Cap Index",
-                                                                    "risk": "Very High"},
-                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
-                                                                    "risk": "Moderate"}
-                },
-                "stocks":{"Pharmaceutical Stocks": {
-                    "Expected Return": 0.16, "stocks":{"Sun Pharmaceutical Industries": {"return": 0.15, "sector": "Pharma", "risk": "Moderate"},
-                    "Cipla": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"},
-                    "Dr Reddy's Laboratories": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
-                    "Zydus Lifesciences": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
-                    "Divi's Laboratories": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"}}
-                },
-                "EV Stocks": {
-                    "Expected Return": 0.18,
-                    "stocks": {
-                    "Tata Motors": {"return": 0.16, "sector": "EV", "risk": "High"},
-                    "Maruti Suzuki India": {"return": 0.15, "sector": "EV", "risk": "High"},
-                    "Bajaj Auto": {"return": 0.14, "sector": "EV", "risk": "High"},
-                    "Mahindra & Mahindra": {"return": 0.15, "sector": "EV", "risk": "High"},
-                    "TVS Motor Company": {"return": 0.13, "sector": "EV", "risk": "High"}
-                }
-                },
-                "Green Energy Stocks": {
-                    "Expected Return": 0.15,
-                    "stocks":{
-                    "Adani Green Energy": {"return": 0.15, "sector": "Green Energy", "risk": "High"},
-                    "NTPC": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
-                    "Power Grid Corporation of India": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"},
-                    "Tata Power": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
-                    "Indian Oil Corporation": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"}
-                }
-                }}
-            }
-
 
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
