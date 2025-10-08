@@ -875,6 +875,9 @@ def main():
                             monthly_contribution=monthly_contribution
                         )
 
+                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                        time.sleep(0.02)
+
                         # Extract investment table from the complete response and create visualizations
                         investment_table = extract_investment_table_from_response(full_response)
 
@@ -917,8 +920,7 @@ def main():
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
                         # speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
-                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-                        time.sleep(0.02)
+
 
                          # Add download button for PDF
                         if full_response:
