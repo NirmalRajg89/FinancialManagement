@@ -95,13 +95,13 @@ def portfolio_optimizer(monthly_contribution, monthsCount, goal, funds, top_n=2)
     results = []
 
     for k in (2, 3):
-        for combo in itertools.combinations(fund_items, k):
+        for combo in itertools.combinations(fund_items, 3):
             rates = [r for (_, r) in combo]
             r_min = min(rates)
             r_max = max(rates)
             if not (r_min - 1e-12 <= r_req <= r_max + 1e-12):
                 continue
-            alloc = feasible_two_fund(combo, r_req) if k == 2 else feasible_three_fund(combo, r_req)
+            alloc = feasible_three_fund(combo, r_req)
             if alloc is None:
                 continue
             weights = alloc

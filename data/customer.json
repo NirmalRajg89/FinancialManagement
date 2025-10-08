@@ -29,9 +29,9 @@
       {
         "liabilityType": "Personal Loan",
         "holderName": "Loan Shark Inc.",
-        "unpaidBalanceAmount": 5000,
-        "monthlyPaymentAmount": 150,
-        "termMonths": 48
+        "unpaidBalanceAmount": 50000,
+        "monthlyPaymentAmount": 1500,
+        "termMonths": 36
       },
       {
         "liabilityType": "Credit Card",
@@ -59,7 +59,7 @@
         "assetType": "Checking Account",
         "assetCategory": "Liquid",
         "holderName": "Capital One",
-        "currentValue": 10000
+        "currentValue": 2000
       },
       {
         "assetType": "401K Retirement Fund",

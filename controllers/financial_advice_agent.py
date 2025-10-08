@@ -20,8 +20,8 @@ def generate_portfolio_diversification_table(monthly_contribution, monthsCount, 
         return "💹 No feasible allocations found."
 
     table = "#### 💹 Investment Diversification\n\n"
-    table += "| Instrument Name | Type | Allocation % | Monthly Investment ($) | Expected Return (%) | Future Value ($) |\n"
-    table += "|-----------------|------|--------------|----------------------|------------------|----------------|\n"
+    table += "| Instrument Name | Type | Allocation % | Monthly Investment ($) | Expected Return (%) | Risk Level | Future Value ($) |\n"
+    table += "|-----------------|------|--------------|----------------------|------------------|-----------|----------------|\n"
 
     top_row = df_top.iloc[0]
 
@@ -32,65 +32,58 @@ def generate_portfolio_diversification_table(monthly_contribution, monthsCount, 
     }
 
     for alloc_name, alloc_pct in weights.items():
-        # Expected return suggested by optimizer for this instrument type
-        expected_return = funds.get(alloc_name, 0.08)
-        fund_type = "Other"
-        instrument_name = None
+        # Calculate split: divide allocation equally between 2 funds
+        split_pct = alloc_pct / 2
 
-        # --- Find closest matching real instrument by return ---
+        # Determine category and pick top 2 matching instruments
+        instruments = []
+        fund_type = "Other"
+
         if "Equity" in alloc_name or "Mutual" in alloc_name:
             category = "Equity Mutual Funds"
             if category in funds_data:
-                closest_fund = min(
+                sorted_funds = sorted(
                     funds_data[category].items(),
-                    key=lambda x: abs(x[1]["return"] - expected_return)
-                )
-                instrument_name = closest_fund[0]
-                expected_return = closest_fund[1]["return"]
+                    key=lambda x: -x[1]["return"]
+                )[:2]
                 fund_type = "Mutual Fund"
+                instruments = [(f[0], f[1]["return"], f[1]["risk"]) for f in sorted_funds]
 
         elif "Index" in alloc_name:
             category = "Index Funds"
             if category in funds_data:
-                closest_index = min(
+                sorted_indexes = sorted(
                     funds_data[category].items(),
-                    key=lambda x: abs(x[1]["return"] - expected_return)
-                )
-                instrument_name = closest_index[0]
-                expected_return = closest_index[1]["return"]
+                    key=lambda x: -x[1]["return"]
+                )[:2]
                 fund_type = "Index Fund"
+                instruments = [(f[0], f[1]["return"], f[1]["risk"]) for f in sorted_indexes]
 
         elif "Stock" in alloc_name:
             category = "Stocks"
             if category in funds_data:
-                # Search all sectors under Stocks
                 all_stocks = []
-                for sector_name, sector_data in funds_data[category].items():
-                    if "stocks" in sector_data:
-                        for sname, sinfo in sector_data["stocks"].items():
-                            all_stocks.append((sector_name, sname, sinfo["return"]))
-                if all_stocks:
-                    closest_stock = min(
-                        all_stocks,
-                        key=lambda x: abs(x[2] - expected_return)
-                    )
-                    sector, sname, ret = closest_stock
-                    instrument_name = f"{sector} ({sname})"
-                    expected_return = ret
-                    fund_type = "Stock"
+                for sector_name, sector_data in funds_data["Stocks"].items():
+                    # sector_data now has 'Expected Return' and 'stocks'
+                    stocks_dict = sector_data.get("stocks", {})
+                    for stock_name, stock_info in stocks_dict.items():
+                        all_stocks.append((f"{sector_name} ({stock_name})", stock_info["return"], stock_info["risk"]))
+                sorted_stocks = sorted(all_stocks, key=lambda x: -x[1])[:2]
+                fund_type = "Stock"
+                instruments = sorted_stocks
 
-        # If still not found, fallback to generic
-        if instrument_name is None:
-            instrument_name = alloc_name
+        # Fallback: use alloc_name itself if no instruments found
+        if not instruments:
+            instruments = [(alloc_name, funds.get(alloc_name, 0.08), "Moderate")]
 
-        # --- Calculate investments ---
-        monthly_investment = monthly_contribution * alloc_pct
-        future_value = future_value_sip(monthly_investment, expected_return, monthsCount)
-
-        table += (
-            f"| {instrument_name} | {fund_type} | {alloc_pct*100:.1f}% "
-            f"| ${monthly_investment:,.2f} | {expected_return*100:.2f}% | ${future_value:,.2f} |\n"
-        )
+        # --- Calculate monthly investment and future value per instrument ---
+        for name, expected_return, risk in instruments:
+            monthly_investment = monthly_contribution * split_pct
+            future_value = future_value_sip(monthly_investment, expected_return, monthsCount)
+            table += (
+                f"| {name} | {fund_type} | {split_pct*100:.1f}% "
+                f"| ${monthly_investment:,.2f} | {expected_return*100:.2f}% | {risk} | ${future_value:,.2f} |\n"
+            )
 
     return table
 
@@ -196,18 +189,31 @@ You are a financial assistant for Guaranteed Rate, providing concise, actionable
 #### Investment Diversification
 Include  the table provided in {generate_portfolio_diversification_table}.
 
+# #### Guaranteed Rate Services
+# - Consider suggestions of short-term & Long-term Plans logics created earlier.
+# - If liabilities exist → recommend **Refinancing** via ([Learn more]({refinance_info_url})). 
+# - Build 6 months emergency fund if {emergency_fund_amount} is lower than {monthly_contribution}. 
+# - If {has_house_asset} = True -> HELOC can provide emergency liquidity.
+# - If {liabilities} > 0 → advise **Refinancing** for lower rates ([Learn more]({refinance_info_url})).
+# - **For “Home” goal:** - Suggest **Mortgage** via ({mortgage_info_url}). 
+#     - If {has_house_asset} = True → offer **HELOC** via ([Learn more]({heloc_info_url})) as backup liquidity. 
+# - **For “Retirement” goal:** - Suggest portfolio diversification: PPF, MF (Equity/Hybrid), Index Funds. 
+#     - If {has_house_asset} = True → HELOC can provide emergency liquidity. 
+# - If refinancing is advised, Include the table provided in {generate_refinance_options_table}
+# ---
+
 #### Guaranteed Rate Services
-- Consider suggestions of short-term & Long-term Plans logics created earlier.
-- If liabilities exist → recommend **Refinancing** via ([Learn more]({refinance_info_url})). 
-- Build 6 months emergency fund if {emergency_fund_amount} is lower than {monthly_contribution}. 
-- If {has_house_asset} = True -> HELOC can provide emergency liquidity.
-- If {liabilities} > 0 → advise **Refinancing** for lower rates ([Learn more]({refinance_info_url})).
-- **For “Home” goal:** - Suggest **Mortgage** via ({mortgage_info_url}). 
-    - If {has_house_asset} = True → offer **HELOC** via ([Learn more]({heloc_info_url})) as backup liquidity. 
-- **For “Retirement” goal:** - Suggest portfolio diversification: PPF, MF (Equity/Hybrid), Index Funds. 
-    - If {has_house_asset} = True → HELOC can provide emergency liquidity. 
-- If refinancing is advised, Include the table provided in {generate_refinance_options_table}
----
+- Follow suggestions of short-term & long-term plan logics.
+- If {liabilities} > 0 → recommend **Refinancing** via ({refinance_info_url}).
+  - Include table from {generate_refinance_options_table} if refinancing is suggested.
+- If {emergency_fund_amount} < {monthly_contribution} → recommend building a 6-month emergency fund. Suggest HELOC if "home" is in {assets}.
+- **For “Home” goal:** 
+  - Suggest **Mortgage** via ({mortgage_info_url}).
+  - If {has_house_asset} = True → suggest **HELOC** via ({heloc_info_url}) as backup liquidity.
+- **For “Retirement” goal:** 
+  - Suggest portfolio diversification: PPF, Mutual Funds (Equity/Hybrid), Index Funds.
+  - Suggest **HELOC** only if {has_house_asset} = True or "home" is in {assets}.
+- Do not reference ownership status explicitly; only suggest items if conditions are satisfied.
 
 ### OUTPUT RULES
 - Output only **Markdown bullet points and tables**, grouped under:

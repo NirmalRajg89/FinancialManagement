@@ -595,7 +595,7 @@ def main():
                  "Savings Condition": "Has savings > Emergency Fund"},
                 {"Risk Level": "Moderate", "Credit Score": "650 – 700", "Debt Ratio": "40% – 70%",
                  "Savings Condition": "Emergency fund only"},
-                {"Risk Level": "Low", "Credit Score": "< 650", "Debt Ratio": "≥ 100%",
+                {"Risk Level": "Low", "Credit Score": "< 650", "Debt Ratio": "≥ 70%",
                  "Savings Condition": "No savings"},
             ])
             # In the first column, display the markdown
