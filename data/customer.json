@@ -48,7 +48,7 @@
       "positionDescription": "Accountant",
       "monthlyIncomeAmount": 7500,
       "annualIncome": 84000,
-      "creditScore": 610,
+      "creditScore": 680,
       "employerName": "Finance Solutions Inc.",
       "addressCity": "Austin",
       "addressState": "TX",
@@ -79,8 +79,8 @@
       {
         "liabilityType": "Credit Card",
         "holderName": "Mastercard",
-        "unpaidBalanceAmount": 3000,
-        "monthlyPaymentAmount": 75
+        "unpaidBalanceAmount": 18000,
+        "monthlyPaymentAmount": 3000
       }
     ]
   },
@@ -146,8 +146,8 @@
     "riskTolerance": "High",
     "employment": {
       "positionDescription": "CEO",
-      "monthlyIncomeAmount": 50000,
-      "annualIncome": 600000,
+      "monthlyIncomeAmount": 30000,
+      "annualIncome": 360000,
       "creditScore": 840,
       "employerName": "Global Holdings Inc.",
       "addressCity": "New York",
@@ -159,7 +159,7 @@
         "assetType": "Investment Portfolio",
         "assetCategory": "Liquid",
         "holderName": "Goldman Sachs",
-        "currentValue": 500000
+        "currentValue": 200000
       },
       {
         "assetType": "Vacation Property",

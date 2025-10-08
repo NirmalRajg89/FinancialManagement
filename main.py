@@ -825,7 +825,7 @@ def main():
                 "monthlyPaymentAmount": str(monthlyPaymentAmount),
                 "total_liabilities": str(total_liabilities),
                 "goals": goals,
-                "mortgage_info_url": "www.rate.com/mortgage-plans",
+                "mortgage_info_url": "www.rate.com/mortgage",
                 "heloc_info_url": "www.rate.com/heloc",
                 "refinance_info_url": "www.rate.com/refinance",
                 "heloc_example": "HELOC is a Home Equity Line of Credit that allows borrowing against home equity.",

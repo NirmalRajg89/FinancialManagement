@@ -194,7 +194,7 @@ Include  the table provided in {generate_portfolio_diversification_table}.
 # - If liabilities exist → recommend **Refinancing** via ([Learn more]({refinance_info_url})). 
 # - Build 6 months emergency fund if {emergency_fund_amount} is lower than {monthly_contribution}. 
 # - If {has_house_asset} = True -> HELOC can provide emergency liquidity.
-# - If {liabilities} > 0 → advise **Refinancing** for lower rates ([Learn more]({refinance_info_url})).
+# - If liabilities exist → advise **Refinancing** for lower rates ([Learn more]({refinance_info_url})).
 # - **For “Home” goal:** - Suggest **Mortgage** via ({mortgage_info_url}). 
 #     - If {has_house_asset} = True → offer **HELOC** via ([Learn more]({heloc_info_url})) as backup liquidity. 
 # - **For “Retirement” goal:** - Suggest portfolio diversification: PPF, MF (Equity/Hybrid), Index Funds. 
@@ -204,12 +204,12 @@ Include  the table provided in {generate_portfolio_diversification_table}.
 
 #### Guaranteed Rate Services
 - Follow suggestions of short-term & long-term plan logics.
-- If {liabilities} > 0 → recommend **Refinancing** via ({refinance_info_url}).
+- If liabilities exist → recommend **Refinancing** via ({refinance_info_url}).
   - Include table from {generate_refinance_options_table} if refinancing is suggested.
 - If {emergency_fund_amount} < {monthly_contribution} → recommend building a 6-month emergency fund. Suggest HELOC if "home" is in {assets}.
 - **For “Home” goal:** 
   - Suggest **Mortgage** via ({mortgage_info_url}).
-  - If {has_house_asset} = True → suggest **HELOC** via ({heloc_info_url}) as backup liquidity.
+  - If {has_house_asset} = True or "home" in {assets} → suggest **HELOC** via ({heloc_info_url}) as backup liquidity.
 - **For “Retirement” goal:** 
   - Suggest portfolio diversification: PPF, Mutual Funds (Equity/Hybrid), Index Funds.
   - Suggest **HELOC** only if {has_house_asset} = True or "home" is in {assets}.
