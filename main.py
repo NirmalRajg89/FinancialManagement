@@ -547,7 +547,7 @@ def main():
             risk_info = {
                 "Low": {
                     "color": "#2ecc71",  # Green
-                    "meaning": "Prefers safety, avoids loss, very low risk acceptance"
+                    "meaning": "Safety, avoids loss, very low risk acceptance having lower returns"
                 },
                 "Moderate": {
                     "color": "#f1c40f",  # Yellow
