@@ -17,7 +17,8 @@ langchain-qdrant
 yfinance
 plotly
 numpy
-pyttsx3
+streamlit-echarts
+edge-tts
 tabulate
 boto3
 twilio

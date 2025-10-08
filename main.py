@@ -17,6 +17,7 @@ from controllers.router_graph import app
 from controllers.run_investment_agent import run_investment_agent
 from controllers.utils import format_tenure, get_tolerance_v1
 from controllers.voice_controller import speak_investment_summary, speak_welcome_message
+from controllers.investment_visualization import display_investment_visualizations, extract_investment_table_from_response
 
 
 def img_to_base64(image_path):
@@ -355,6 +356,16 @@ def main():
 
         # Step 1: Ask for name
         user_name = st.text_input("Enter your name to begin:")
+        # Global stop button at top of page
+        # render_mute_toggle()
+        # Initialize mute state
+        if "mute_audio" not in st.session_state:
+            st.session_state["mute_audio"] = False
+
+        # Mute/unmute toggle
+        if st.button("🔇"):
+            st.session_state["mute_audio"] = not st.session_state["mute_audio"]
+
 
         if user_name:
             if user_name not in all_user_data:
@@ -362,8 +373,10 @@ def main():
                 st.stop()
 
             # Speak welcome message automatically
-            # speak_welcome_message(user_name)
-            
+                    # Only speak welcome message once
+            if "welcome_spoken" not in st.session_state:
+                speak_welcome_message(user_name)
+                st.session_state.welcome_spoken = True
             user_profile = all_user_data[user_name]
 
             # Step 2: Financial summary
@@ -517,7 +530,7 @@ def main():
                 return p * (((1 + r / n) ** (n * t) - 1) / (r / n)) * (1 + r / n)
 
             def required_return(p, fv_target, n, t):
-                print("tenure", t)
+                """Find required annual return using binary search"""
                 low, high = 0.0, 0.25  # 0% to 25% annual return
                 for _ in range(100):  # iterate for precision
                     mid = (low + high) / 2
@@ -739,9 +752,31 @@ def main():
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
 
+
+                        # Extract investment table from the complete response and create visualizations
+                        print("full_response",full_response)
+                        investment_table = extract_investment_table_from_response(full_response)
+                        print("investment_table",investment_table)
+
+
+                        if investment_table:
+                            # st.write("✅ **Investment Table Found in Main!**")
+                            # st.code(investment_table)
+
+                            # Speak the investment analysis summary
+                            # speak_investment_analysis_summary(investment_table)
+                            speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+
+                            # Display visualizations for the investment analysis
+                            display_investment_visualizations(investment_table, goal_amount)
+                        else:
+                            st.write("❌ **No Investment Table Found in Main**")
+                            # Fallback: speak the general investment summary
+                            speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
-                        # speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
