@@ -1,8 +1,16 @@
 import base64
 import json
+import io
+import re
 
 import pandas as pd
 import streamlit as st
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+import markdown
 from streamlit_option_menu import option_menu
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_openai import ChatOpenAI
@@ -28,6 +36,129 @@ def img_to_base64(image_path):
     except Exception as e:
         print(f"Error converting image to base64: {str(e)}")
         return None
+
+
+def create_pdf_from_markdown(content, filename="investment_report.pdf"):
+    """Create a PDF from markdown content with proper formatting."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    
+    # Get styles
+    styles = getSampleStyleSheet()
+    
+    # Create custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=30,
+        textColor=colors.darkblue
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.darkblue
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=10,
+        spaceAfter=6
+    )
+    
+    # Build content
+    story = []
+    
+    # Add title
+    story.append(Paragraph("Investment Analysis Report", title_style))
+    story.append(Spacer(1, 12))
+    
+    # Process content line by line
+    lines = content.split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        if not line:
+            story.append(Spacer(1, 6))
+            i += 1
+            continue
+            
+        # Handle headers
+        if line.startswith('#'):
+            level = len(line) - len(line.lstrip('#'))
+            header_text = line.lstrip('# ').strip()
+            if level == 1:
+                story.append(Paragraph(header_text, title_style))
+            else:
+                story.append(Paragraph(header_text, heading_style))
+            story.append(Spacer(1, 12))
+            
+        # Handle tables (look for markdown table patterns)
+        elif '|' in line and line.count('|') >= 2:
+            table_lines = []
+            # Collect all table lines
+            while i < len(lines) and '|' in lines[i] and lines[i].count('|') >= 2:
+                table_line = lines[i].strip()
+                if not table_line.startswith('|---'):  # Skip separator lines
+                    table_lines.append(table_line)
+                i += 1
+            i -= 1  # Adjust for the loop increment
+            
+            if table_lines:
+                # Parse table
+                table_data = []
+                for table_line in table_lines:
+                    cells = [cell.strip() for cell in table_line.split('|')[1:-1]]  # Remove empty first/last
+                    table_data.append(cells)
+                
+                if table_data:
+                    # Create PDF table
+                    pdf_table = Table(table_data)
+                    pdf_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 10),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('FONTSIZE', (0, 1), (-1, -1), 9),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    story.append(pdf_table)
+                    story.append(Spacer(1, 12))
+        
+        # Handle bullet points
+        elif line.startswith('- ') or line.startswith('* '):
+            bullet_text = line[2:].strip()
+            story.append(Paragraph(f"• {bullet_text}", normal_style))
+            
+        # Handle numbered lists
+        elif re.match(r'^\d+\.', line):
+            story.append(Paragraph(line, normal_style))
+            
+        # Handle bold text
+        elif '**' in line:
+            # Simple bold text handling
+            formatted_line = line.replace('**', '<b>').replace('<b>', '<b>', 1).replace('<b>', '</b>', 1)
+            story.append(Paragraph(formatted_line, normal_style))
+            
+        # Regular text
+        else:
+            story.append(Paragraph(line, normal_style))
+        
+        i += 1
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 def extract_stock_symbol(search_query):
     """
@@ -359,14 +490,7 @@ def main():
         # Global stop button at top of page
         # render_mute_toggle()
         # Initialize mute state
-        if "mute_audio" not in st.session_state:
-            st.session_state["mute_audio"] = False
-
         # Mute/unmute toggle
-        if st.button("🔇"):
-            st.session_state["mute_audio"] = not st.session_state["mute_audio"]
-
-
         if user_name:
             if user_name not in all_user_data:
                 st.error(f"No data found for user: {user_name}")
@@ -515,11 +639,11 @@ def main():
 
             default_long_term_values = {
                 "Retirement": {
-                    "tenure": 10,
+                    "tenure": 15,
                     "goal_amount": 1000000
                 },
                 "Home": {
-                    "tenure": 10,
+                    "tenure": 15,
                     "goal_amount": 1000000
                 }
             }
@@ -539,7 +663,7 @@ def main():
                         low = mid
                     else:
                         high = mid
-                return round(mid * 100, 2)  # return in %
+                return mid * 100  # return in %
 
             # risk_level = user_profile.get("riskTolerance", "Moderate")
 
@@ -559,7 +683,7 @@ def main():
                 },
                 "Very High": {
                     "color": "#e74c3c",  # Red
-                    "meaning": "Aggressive investment needed, accepts high volatility for maximum returns"
+                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
                 },
                 "Unrealistic": {
                     "color": "#8e44ad",  # Purple
@@ -624,7 +748,7 @@ def main():
                     )
             goal_amount = goal_amount - cash_reserves if emergency_fund_amount > disposable_income else goal_amount
             # Required annual return
-            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "Short-term" else tenure)
+            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "short-term" else tenure)
 
             # Map to risk profile
             if req_return <= 7:
@@ -686,6 +810,59 @@ def main():
             #print(goal_duration)
             #print(monthly_contribution_investment)
 
+            funds_data = {
+                "Equity Mutual Funds": {
+                    "Canara Robeco Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Mirae Asset Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Parag Parikh Flexi Cap Fund": {"return": 0.11, "category": "Flexi Cap", "risk": "Moderate"},
+                    "HDFC Flexi Cap Fund": {"return": 0.10, "category": "Flexi Cap", "risk": "Moderate"},
+                    "Axis Midcap Fund": {"return": 0.12, "category": "Mid Cap", "risk": "High"},
+                    "Kotak Mid Cap Fund": {"return": 0.11, "category": "Mid Cap", "risk": "High"},
+                    "SBI Small Cap Fund": {"return": 0.13, "category": "Small Cap", "risk": "Very High"},
+                    "Mirae Asset Aggressive Hybrid Fund": {"return": 0.10, "category": "Hybrid", "risk": "Moderate"}
+                },
+                "Index Funds": {
+                    "Motilal Oswal Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                  "risk": "High"},
+                    "Aditya Birla Sun Life Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                          "risk": "High"},
+                    "Axis Nifty Smallcap 50 Index Fund": {"return": 0.15, "category": "Small Cap Index",
+                                                          "risk": "Very High"},
+                    "Motilal Oswal Nifty Smallcap 250 Index Fund": {"return": 0.14, "category": "Small Cap Index",
+                                                                    "risk": "Very High"},
+                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
+                                                                    "risk": "Moderate"}
+                },
+                "stocks":{"Pharmaceutical Stocks": {
+                    "Expected Return": 0.16, "stocks":{"Sun Pharmaceutical Industries": {"return": 0.15, "sector": "Pharma", "risk": "Moderate"},
+                    "Cipla": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"},
+                    "Dr Reddy's Laboratories": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Zydus Lifesciences": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Divi's Laboratories": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"}}
+                },
+                "EV Stocks": {
+                    "Expected Return": 0.18,
+                    "stocks": {
+                    "Tata Motors": {"return": 0.16, "sector": "EV", "risk": "High"},
+                    "Maruti Suzuki India": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "Bajaj Auto": {"return": 0.14, "sector": "EV", "risk": "High"},
+                    "Mahindra & Mahindra": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "TVS Motor Company": {"return": 0.13, "sector": "EV", "risk": "High"}
+                }
+                },
+                "Green Energy Stocks": {
+                    "Expected Return": 0.15,
+                    "stocks":{
+                    "Adani Green Energy": {"return": 0.15, "sector": "Green Energy", "risk": "High"},
+                    "NTPC": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Power Grid Corporation of India": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"},
+                    "Tata Power": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Indian Oil Corporation": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"}
+                }
+                }}
+            }
+
+
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
                 "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
@@ -715,8 +892,7 @@ def main():
                 "cash_reserves": cash_reserves,
                 "funds_data": funds_data,
                 "investment_advisory_options": investment_advisory_options,
-                "tenure_months": tenure if plan_type == "Short-term" else tenure*12,
-                "emergency_fund_amount": emergency_fund_amount
+                "tenure_months": tenure if plan_type == "Short-term" else tenure*12
             }
             st.session_state.static_vars = static_vars
             # Step 4: Generate Plan
@@ -751,12 +927,25 @@ def main():
 
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
+                        
+                        # Add download button for PDF
+                        if full_response:
+                            try:
+                                pdf_data = create_pdf_from_markdown(full_response)
+                                st.download_button(
+                                    label="📄 Download Investment Report as PDF",
+                                    data=pdf_data,
+                                    file_name=f"investment_report_{plan_type.lower()}_{goals.replace(' ', '_')}.pdf",
+                                    mime="application/pdf",
+                                    help="Download the complete investment analysis report as a PDF file"
+                                )
+                            except Exception as e:
+                                st.error(f"Error creating PDF: {str(e)}")
+                                st.write("PDF generation failed, but you can copy the text above.")
 
 
                         # Extract investment table from the complete response and create visualizations
-                        print("full_response",full_response)
                         investment_table = extract_investment_table_from_response(full_response)
-                        print("investment_table",investment_table)
 
 
                         if investment_table:
@@ -769,6 +958,26 @@ def main():
 
                             # Display visualizations for the investment analysis
                             display_investment_visualizations(investment_table, goal_amount)
+                            
+                            # Append the visualization data to chat history
+                            st.session_state.chat_history.append({
+                                "role": "assistant",
+                                "type": "charts",
+                                "data": {
+                                    "investment_table": investment_table,
+                                    "goal_amount": goal_amount
+                                }
+                            })
+                            
+                            # # Instead of storing the chart itself, store the data needed to regenerate it
+                            # st.session_state.chat_history.append({
+                            #     "role": "assistant",
+                            #     "type": "charts",
+                            #     "data": {
+                            #         "investment_table": investment_table,
+                            #         "goal_amount": goal_amount
+                            #     }
+                            # })                        
                         else:
                             st.write("❌ **No Investment Table Found in Main**")
                             # Fallback: speak the general investment summary
@@ -776,14 +985,21 @@ def main():
 
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
-                        speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        # speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        
 
             # Step 5: Show conversation + follow-up chat
             if st.session_state.chat_history:
                 st.subheader("💬 Investment Summary")
                 for msg in st.session_state.chat_history:
                     with st.chat_message(msg["role"]):
-                        st.markdown(msg["content"])
+                        if msg.get("type") == "charts":
+                            # Re-render the investment visualizations from stored data
+                            investment_table = msg["data"]["investment_table"]
+                            goal_amount = msg["data"]["goal_amount"]
+                            display_investment_visualizations(investment_table, goal_amount)
+                        else:
+                            st.markdown(msg["content"])
 
                 # Chat input for follow-ups
                 user_query = st.chat_input("Type your question and press Enter...")
