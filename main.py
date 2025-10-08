@@ -639,11 +639,11 @@ def main():
 
             default_long_term_values = {
                 "Retirement": {
-                    "tenure": 10,
+                    "tenure": 15,
                     "goal_amount": 1000000
                 },
                 "Home": {
-                    "tenure": 10,
+                    "tenure": 15,
                     "goal_amount": 1000000
                 }
             }
@@ -663,7 +663,7 @@ def main():
                         low = mid
                     else:
                         high = mid
-                return round(mid * 100, 2)  # return in %
+                return mid * 100  # return in %
 
             # risk_level = user_profile.get("riskTolerance", "Moderate")
 
@@ -683,7 +683,7 @@ def main():
                 },
                 "Very High": {
                     "color": "#e74c3c",  # Red
-                    "meaning": "Aggressive investment needed, accepts high volatility for maximum returns"
+                    "meaning": "Aggressive investor, accepts high volatility for maximum returns"
                 },
                 "Unrealistic": {
                     "color": "#8e44ad",  # Purple
@@ -748,7 +748,7 @@ def main():
                     )
             goal_amount = goal_amount - cash_reserves if emergency_fund_amount > disposable_income else goal_amount
             # Required annual return
-            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "Short-term" else tenure)
+            req_return = required_return(monthly_contribution, goal_amount, 12, tenure / 12 if plan_type == "short-term" else tenure)
 
             # Map to risk profile
             if req_return <= 7:
@@ -810,6 +810,59 @@ def main():
             #print(goal_duration)
             #print(monthly_contribution_investment)
 
+            funds_data = {
+                "Equity Mutual Funds": {
+                    "Canara Robeco Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Mirae Asset Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
+                    "Parag Parikh Flexi Cap Fund": {"return": 0.11, "category": "Flexi Cap", "risk": "Moderate"},
+                    "HDFC Flexi Cap Fund": {"return": 0.10, "category": "Flexi Cap", "risk": "Moderate"},
+                    "Axis Midcap Fund": {"return": 0.12, "category": "Mid Cap", "risk": "High"},
+                    "Kotak Mid Cap Fund": {"return": 0.11, "category": "Mid Cap", "risk": "High"},
+                    "SBI Small Cap Fund": {"return": 0.13, "category": "Small Cap", "risk": "Very High"},
+                    "Mirae Asset Aggressive Hybrid Fund": {"return": 0.10, "category": "Hybrid", "risk": "Moderate"}
+                },
+                "Index Funds": {
+                    "Motilal Oswal Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                  "risk": "High"},
+                    "Aditya Birla Sun Life Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
+                                                                          "risk": "High"},
+                    "Axis Nifty Smallcap 50 Index Fund": {"return": 0.15, "category": "Small Cap Index",
+                                                          "risk": "Very High"},
+                    "Motilal Oswal Nifty Smallcap 250 Index Fund": {"return": 0.14, "category": "Small Cap Index",
+                                                                    "risk": "Very High"},
+                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
+                                                                    "risk": "Moderate"}
+                },
+                "stocks":{"Pharmaceutical Stocks": {
+                    "Expected Return": 0.16, "stocks":{"Sun Pharmaceutical Industries": {"return": 0.15, "sector": "Pharma", "risk": "Moderate"},
+                    "Cipla": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"},
+                    "Dr Reddy's Laboratories": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Zydus Lifesciences": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
+                    "Divi's Laboratories": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"}}
+                },
+                "EV Stocks": {
+                    "Expected Return": 0.18,
+                    "stocks": {
+                    "Tata Motors": {"return": 0.16, "sector": "EV", "risk": "High"},
+                    "Maruti Suzuki India": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "Bajaj Auto": {"return": 0.14, "sector": "EV", "risk": "High"},
+                    "Mahindra & Mahindra": {"return": 0.15, "sector": "EV", "risk": "High"},
+                    "TVS Motor Company": {"return": 0.13, "sector": "EV", "risk": "High"}
+                }
+                },
+                "Green Energy Stocks": {
+                    "Expected Return": 0.15,
+                    "stocks":{
+                    "Adani Green Energy": {"return": 0.15, "sector": "Green Energy", "risk": "High"},
+                    "NTPC": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Power Grid Corporation of India": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"},
+                    "Tata Power": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
+                    "Indian Oil Corporation": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"}
+                }
+                }}
+            }
+
+
             static_vars = {
                 "monthly_contribution": str(monthly_contribution),
                 "tenure": f"{tenure} months" if plan_type == "Short-term" else f"{tenure} years",
@@ -839,8 +892,7 @@ def main():
                 "cash_reserves": cash_reserves,
                 "funds_data": funds_data,
                 "investment_advisory_options": investment_advisory_options,
-                "tenure_months": tenure if plan_type == "Short-term" else tenure*12,
-                "emergency_fund_amount": emergency_fund_amount
+                "tenure_months": tenure if plan_type == "Short-term" else tenure*12
             }
             st.session_state.static_vars = static_vars
             # Step 4: Generate Plan
@@ -875,6 +927,21 @@ def main():
 
                         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
                         time.sleep(0.02)
+                        
+                        # Add download button for PDF
+                        if full_response:
+                            try:
+                                pdf_data = create_pdf_from_markdown(full_response)
+                                st.download_button(
+                                    label="📄 Download Investment Report as PDF",
+                                    data=pdf_data,
+                                    file_name=f"investment_report_{plan_type.lower()}_{goals.replace(' ', '_')}.pdf",
+                                    mime="application/pdf",
+                                    help="Download the complete investment analysis report as a PDF file"
+                                )
+                            except Exception as e:
+                                st.error(f"Error creating PDF: {str(e)}")
+                                st.write("PDF generation failed, but you can copy the text above.")
 
 
                         # Extract investment table from the complete response and create visualizations

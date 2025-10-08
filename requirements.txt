@@ -22,3 +22,5 @@ edge-tts
 tabulate
 boto3
 twilio
+reportlab
+markdown
