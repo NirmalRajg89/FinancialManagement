@@ -1,4 +1,12 @@
 {
+
+    "Debt Mutual Funds": {
+        "HDFC Short Term Debt Fund": {"return": 0.075, "category": "Debt", "risk": "Low"},
+        "ICICI Prudential Corporate Bond Fund": {"return": 0.078, "category": "Corporate Bond", "risk": "Low"},
+        "Axis Dynamic Bond Fund": {"return": 0.08, "category": "Dynamic Bond", "risk": "Low"},
+        "SBI Magnum Medium Duration Fund": {"return": 0.082, "category": "Medium Duration Debt", "risk": "Moderate"}
+    },
+
                 "Equity Mutual Funds": {
                     "Canara Robeco Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
                     "Mirae Asset Large Cap Fund": {"return": 0.10, "category": "Large Cap", "risk": "Moderate"},
@@ -9,7 +17,10 @@
                     "SBI Small Cap Fund": {"return": 0.13, "category": "Small Cap", "risk": "Very High"},
                     "Mirae Asset Aggressive Hybrid Fund": {"return": 0.10, "category": "Hybrid", "risk": "Moderate"}
                 },
+
                 "Index Funds": {
+                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
+                                                                    "risk": "Moderate"},
                     "Motilal Oswal Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
                                                                   "risk": "High"},
                     "Aditya Birla Sun Life Nifty Midcap 150 Index Fund": {"return": 0.13, "category": "Mid Cap Index",
@@ -17,36 +28,60 @@
                     "Axis Nifty Smallcap 50 Index Fund": {"return": 0.15, "category": "Small Cap Index",
                                                           "risk": "Very High"},
                     "Motilal Oswal Nifty Smallcap 250 Index Fund": {"return": 0.14, "category": "Small Cap Index",
-                                                                    "risk": "Very High"},
-                    "Edelweiss Nifty Large Midcap 250 Index Fund": {"return": 0.12, "category": "Large & Mid Cap Index",
-                                                                    "risk": "Moderate"}
+                                                                    "risk": "Very High"}
                 },
-                "stocks":{"Pharmaceutical Stocks": {
-                    "Expected Return": 0.16, "stocks":{"Sun Pharmaceutical Industries": {"return": 0.15, "sector": "Pharma", "risk": "Moderate"},
-                    "Cipla": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"},
-                    "Dr Reddy's Laboratories": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
-                    "Zydus Lifesciences": {"return": 0.13, "sector": "Pharma", "risk": "Moderate"},
-                    "Divi's Laboratories": {"return": 0.14, "sector": "Pharma", "risk": "Moderate"}}
-                },
-                "EV Stocks": {
-                    "Expected Return": 0.18,
-                    "stocks": {
-                    "Tata Motors": {"return": 0.16, "sector": "EV", "risk": "High"},
-                    "Maruti Suzuki India": {"return": 0.15, "sector": "EV", "risk": "High"},
-                    "Bajaj Auto": {"return": 0.14, "sector": "EV", "risk": "High"},
-                    "Mahindra & Mahindra": {"return": 0.15, "sector": "EV", "risk": "High"},
-                    "TVS Motor Company": {"return": 0.13, "sector": "EV", "risk": "High"}
-                }
-                },
-                "Green Energy Stocks": {
-                    "Expected Return": 0.15,
-                    "stocks":{
-                    "Adani Green Energy": {"return": 0.15, "sector": "Green Energy", "risk": "High"},
-                    "NTPC": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
-                    "Power Grid Corporation of India": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"},
-                    "Tata Power": {"return": 0.13, "sector": "Green Energy", "risk": "Moderate"},
-                    "Indian Oil Corporation": {"return": 0.14, "sector": "Green Energy", "risk": "Moderate"}
-                }
-                }}
-            }
 
+                "Stocks": {
+                    "Pharmaceutical Stocks": {
+                        "Expected Return": 0.16,
+                        "stocks": {
+                            "Sun Pharmaceutical Industries": {"return": 0.16, "sector": "Pharma", "risk": "High"},
+                            "Cipla": {"return": 0.15, "sector": "Pharma", "risk": "High"},
+                            "Dr Reddy's Laboratories": {"return": 0.16, "sector": "Pharma", "risk": "High"},
+                            "Zydus Lifesciences": {"return": 0.17, "sector": "Pharma", "risk": "High"},
+                            "Divi's Laboratories": {"return": 0.18, "sector": "Pharma", "risk": "High"}
+                        }
+                    },
+                    "EV Stocks": {
+                        "Expected Return": 0.18,
+                        "stocks": {
+                            "Tata Motors": {"return": 0.18, "sector": "EV", "risk": "High"},
+                            "Maruti Suzuki India": {"return": 0.17, "sector": "EV", "risk": "High"},
+                            "Bajaj Auto": {"return": 0.16, "sector": "EV", "risk": "High"},
+                            "Mahindra & Mahindra": {"return": 0.17, "sector": "EV", "risk": "High"},
+                            "TVS Motor Company": {"return": 0.16, "sector": "EV", "risk": "High"}
+                        }
+                    },
+                    "Green Energy Stocks": {
+                        "Expected Return": 0.17,
+                        "stocks": {
+                            "Adani Green Energy": {"return": 0.18, "sector": "Green Energy", "risk": "Very High"},
+                            "NTPC": {"return": 0.15, "sector": "Green Energy", "risk": "Moderate"},
+                            "Power Grid Corporation of India": {"return": 0.16, "sector": "Green Energy",
+                                                                "risk": "High"},
+                            "Tata Power": {"return": 0.17, "sector": "Green Energy", "risk": "High"},
+                            "Indian Oil Corporation": {"return": 0.15, "sector": "Green Energy", "risk": "High"}
+                        }
+                    },
+                    "Tech Growth Stocks": {
+                        "Expected Return": 0.20,
+                        "stocks": {
+                            "Infosys": {"return": 0.17, "sector": "Tech", "risk": "High"},
+                            "TCS": {"return": 0.16, "sector": "Tech", "risk": "High"},
+                            "HCL Technologies": {"return": 0.17, "sector": "Tech", "risk": "High"},
+                            "Persistent Systems": {"return": 0.19, "sector": "Tech", "risk": "Very High"},
+                            "LTIMindtree": {"return": 0.20, "sector": "Tech", "risk": "Very High"}
+                        }
+                    },
+                    "Emerging Market Stocks": {
+                        "Expected Return": 0.21,
+                        "stocks": {
+                            "Adani Enterprises": {"return": 0.21, "sector": "Infrastructure", "risk": "Very High"},
+                            "Reliance Industries": {"return": 0.18, "sector": "Conglomerate", "risk": "High"},
+                            "Zomato": {"return": 0.20, "sector": "Digital", "risk": "Very High"},
+                            "Nykaa": {"return": 0.19, "sector": "E-Commerce", "risk": "Very High"},
+                            "Paytm": {"return": 0.22, "sector": "Fintech", "risk": "Unrealistic"}
+                        }
+                    }
+                }
+            }

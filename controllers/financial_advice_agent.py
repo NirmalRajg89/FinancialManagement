@@ -65,9 +65,10 @@ def generate_portfolio_diversification_table(monthly_contribution, monthsCount, 
             if category in funds_data:
                 # Search all sectors under Stocks
                 all_stocks = []
-                for sector, stocks in funds_data[category].items():
-                    for sname, sinfo in stocks.items():
-                        all_stocks.append((sector, sname, sinfo["return"]))
+                for sector_name, sector_data in funds_data[category].items():
+                    if "stocks" in sector_data:
+                        for sname, sinfo in sector_data["stocks"].items():
+                            all_stocks.append((sector_name, sname, sinfo["return"]))
                 if all_stocks:
                     closest_stock = min(
                         all_stocks,
@@ -93,6 +94,39 @@ def generate_portfolio_diversification_table(monthly_contribution, monthsCount, 
 
     return table
 
+def generate_refinance_options_table():
+    """
+    Generate a Markdown table for refinancing options.
+    refinance_data: list of dicts with keys: loan_type, rate, apr, points, payment
+    """
+    refinance_data = [
+        {"loan_type": "30-year Fixed Conventional", "rate": 6.125, "apr": 6.380, "points": 0.975,
+         "points_value": "$3,240.00", "payment": 1825.40},
+        {"loan_type": "30-year Jumbo Fixed", "rate": 6.450, "apr": 6.720, "points": 1.150, "points_value": "$4,870.00",
+         "payment": 4925.65},
+        {"loan_type": "20-year Fixed Conventional", "rate": 5.980, "apr": 6.210, "points": 1.025,
+         "points_value": "$3,580.00", "payment": 2178.30},
+        {"loan_type": "15-year Fixed", "rate": 5.450, "apr": 5.720, "points": 0.995, "points_value": "$2,990.00",
+         "payment": 2480.15},
+        {"loan_type": "FHA Loan (Refinance)", "rate": 5.650, "apr": 6.280, "points": 1.125, "points_value": "$3,240.00",
+         "payment": 1589.70},
+        {"loan_type": "VA Loan (Refinance)", "rate": 5.480, "apr": 5.820, "points": 1.050, "points_value": "$3,050.00",
+         "payment": 1725.10},
+    ]
+
+    table = "#### Refinance Options\n\n"
+    table += "| Loan Type | Rate | APR | Points | Monthly Payment |\n"
+    table += "|------------|------|------|---------|----------------|\n"
+
+    for loan in refinance_data:
+        points_str = f"{loan['points']} ({loan['points_value']})" if 'points_value' in loan else str(loan['points'])
+        table += (
+            f"| {loan['loan_type']} | {loan['rate']}% | {loan['apr']}% "
+            f"| {points_str} | ${loan['payment']:,.2f} |\n"
+        )
+
+    return table
+
 
 class AdvisorAgent:
     """Wrapper around AgentExecutor so we can safely add custom methods."""
@@ -114,6 +148,7 @@ class AdvisorAgent:
                 goal=self.goal,
                 funds=self.funds
             )
+            input_dict["generate_refinance_options_table"] = generate_refinance_options_table()
 
         result = self.executor.invoke(input_dict)
         return result.get("output", result)
@@ -137,21 +172,24 @@ You are a financial assistant for Guaranteed Rate, providing concise, actionable
 - {req_return}: required return (%) for goal
 - {risk_as_per_tenure_and_goal}: ["Low", "Moderate", "High", "Very High", "Unrealistic"]
 - {funds_data}: list of available Stocks, Mutual Funds, Index Funds
-
+- {emergency_fund_amount}: numeric value, existing emergency fund 
 ---
 
 ### LOGIC AND RULES
 
 #### Short-term Plans
 - Focus on liquidity and capital safety.
-- Prioritize Bank Savings, Recurring Deposits, or Liquid Funds.
-- Extra liquidity: small % (10–20%) in conservative Mutual Funds or Index Funds.
+- Consider the {req_return}:
+    - if {req_return} greater than 8%. Focus to invest on higher risk (10%-20% returns) like Mutual Funds or Index Funds or Stocks.
+    - if {req_return} less than 8%. Focus to invest on higher risk (10%-20% returns) like Mutual Funds or Index Funds or Stocks and partial investment in Debt Mutual Funds or Recurring Deposits.
+- Suggest diversification of funds.
 - If liabilities exist: recommend Refinancing.
-- Build 6 months emergency fund.
+- If {has_house_asset} and home not in liabilities mortgage, suggest HELOC.
+- Build 6 months emergency fund if {emergency_fund_amount} is lower than {monthly_contribution}.
 
 #### Long-term Plans
-- Home: if goal unmet → suggest Mortgage; if has house → HELOC.
-- Retirement: diversify in PPF, Equity/Hybrid Mutual Funds, Index Funds; HELOC for emergency if has house.
+- If {goals} is Home: if goal unmet → suggest Mortgage; if has house → HELOC with Mortgage.
+- If {goals} is Retirement: diversify partially in PPF, Equity Mutual Funds, Index Funds; Stocks, HELOC for emergency if has {has_house_asset}.
 - If liabilities > 0 → advise Refinancing.
 - Align advice with {req_return}.
 
@@ -159,9 +197,16 @@ You are a financial assistant for Guaranteed Rate, providing concise, actionable
 Include  the table provided in {generate_portfolio_diversification_table}.
 
 #### Guaranteed Rate Services
-- Short-term: liquidity, RD/Liquid Funds, optional small MF/Index allocation, Refinancing if liabilities.
-- Long-term: Mortgage/HELOC for home, diversified retirement portfolio, Refinancing if liabilities.
-
+- Consider suggestions of short-term & Long-term Plans logics created earlier.
+- If liabilities exist → recommend **Refinancing** via ([Learn more]({refinance_info_url})). 
+- Build 6 months emergency fund if {emergency_fund_amount} is lower than {monthly_contribution}. 
+- If {has_house_asset} = True -> HELOC can provide emergency liquidity.
+- If {liabilities} > 0 → advise **Refinancing** for lower rates ([Learn more]({refinance_info_url})).
+- **For “Home” goal:** - Suggest **Mortgage** via ({mortgage_info_url}). 
+    - If {has_house_asset} = True → offer **HELOC** via ([Learn more]({heloc_info_url})) as backup liquidity. 
+- **For “Retirement” goal:** - Suggest portfolio diversification: PPF, MF (Equity/Hybrid), Index Funds. 
+    - If {has_house_asset} = True → HELOC can provide emergency liquidity. 
+- If refinancing is advised, Include the table provided in {generate_refinance_options_table}
 ---
 
 ### OUTPUT RULES

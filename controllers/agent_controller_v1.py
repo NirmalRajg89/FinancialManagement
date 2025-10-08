@@ -130,12 +130,12 @@ def create_investment_summary_v1(static_vars: dict):
     # - Notes on liquidity and characteristics
 
     #### 7. Goal Feasibility
-    Assess if the current monthly contribution can achieve the goal amount over tenure.
-    Provide a simple eloboration of the result (including {goal_amount}, {tenure} and {req_return}) with involving below terms:
-    - "Feasible"
-    - "Needs higher contribution"
-    - "Requires longer tenure"
-
+    Evaluate the expected return ({req_return}) against the {investment_options} ranges to determine if the current monthly contribution is sufficient to reach the goal within the planned tenure.
+    Provide a single-line recommendation from the options below, followed by a hyphen and a brief explanation or suggestion:
+    "Feasible"
+    "Needs higher contribution"
+    "Requires longer tenure"
+    "Unrealistic"
     ---
 
     Output clean Markdown only.
