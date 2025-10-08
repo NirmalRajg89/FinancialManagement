@@ -617,7 +617,7 @@ def main():
 
             # Step 3: Preferences
             st.subheader("🎯 Investment Suggestions")
-            plan_type = st.radio("Select Plan Type", ["Short-term", "Long-term"], horizontal=True)
+            plan_type = st.radio("Select Plan Type", ["Long-term","Short-term"], horizontal=True)
             # Calculate disposable income
             disposable_income = employment["monthlyIncomeAmount"] - monthlyPaymentAmount
             income_risk_ratios = {"Low": 0.3, "Moderate": 0.5, "High": 0.7}
@@ -638,14 +638,15 @@ def main():
             }
 
             default_long_term_values = {
-                "Retirement": {
-                    "tenure": 15,
-                    "goal_amount": 1000000
-                },
                 "Home": {
                     "tenure": 15,
                     "goal_amount": 1000000
+                },
+                "Retirement": {
+                    "tenure": 15,
+                    "goal_amount": 1000000
                 }
+
             }
 
             # risk_levels = ["Low", "Moderate", "High", "Very High", "Unrealistic"]
@@ -723,7 +724,7 @@ def main():
                 #col4, col5, col6 = st.columns(3)  # second row with 2 columns
 
                 with col1:
-                    goals = st.selectbox("Goal", ["Retirement", "Home"])
+                    goals = st.selectbox("Goal", [ "Home","Retirement"])
 
                 with col2:
                     tenure = st.number_input("Duration(in years)", min_value=5, max_value=30, value=default_long_term_values[goals]['tenure'], step=1)
@@ -763,10 +764,11 @@ def main():
                 base_risk = "Unrealistic"
 
             info = risk_info.get(base_risk, info)
+            round_return = round(req_return, 2)
 
             st.text(f"""Note: Your maximum available monthly income after debts is ${disposable_income:,}. Based on your risk tolerance, a safer monthly contribution is ${monthly_contribution:,} """)
             st.text(
-                f"""Aiming for a required return of {req_return}%""")
+                f"""Aiming for a required return of {round_return}%""")
             st.markdown(
                 f"""
                 <div style="
