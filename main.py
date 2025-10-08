@@ -928,25 +928,6 @@ def main():
                             monthly_contribution=monthly_contribution
                         )
 
-                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-                        time.sleep(0.02)
-                        
-                        # Add download button for PDF
-                        if full_response:
-                            try:
-                                pdf_data = create_pdf_from_markdown(full_response)
-                                st.download_button(
-                                    label="📄 Download Investment Report as PDF",
-                                    data=pdf_data,
-                                    file_name=f"investment_report_{plan_type.lower()}_{goals.replace(' ', '_')}.pdf",
-                                    mime="application/pdf",
-                                    help="Download the complete investment analysis report as a PDF file"
-                                )
-                            except Exception as e:
-                                st.error(f"Error creating PDF: {str(e)}")
-                                st.write("PDF generation failed, but you can copy the text above.")
-
-
                         # Extract investment table from the complete response and create visualizations
                         investment_table = extract_investment_table_from_response(full_response)
 
@@ -959,8 +940,8 @@ def main():
                             # speak_investment_analysis_summary(investment_table)
                             speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
 
-                            # Display visualizations for the investment analysis
-                            display_investment_visualizations(investment_table, goal_amount)
+                            # # Display visualizations for the investment analysis
+                            # display_investment_visualizations(investment_table, goal_amount)
                             
                             # Append the visualization data to chat history
                             st.session_state.chat_history.append({
@@ -989,6 +970,24 @@ def main():
                         # full_response is already formatted Markdown from the agent
                         # Automatically speak investment plan summary
                         # speak_investment_summary(plan_type, goals, risk_level, monthly_contribution, goal_amount, tenure)
+                        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+                        time.sleep(0.02)
+
+                         # Add download button for PDF
+                        if full_response:
+                            try:
+                                pdf_data = create_pdf_from_markdown(full_response)
+                                st.download_button(
+                                    label="📄 Download Investment Report as PDF",
+                                    data=pdf_data,
+                                    file_name=f"investment_report_{plan_type.lower()}_{goals.replace(' ', '_')}.pdf",
+                                    mime="application/pdf",
+                                    help="Download the complete investment analysis report as a PDF file"
+                                )
+                            except Exception as e:
+                                st.error(f"Error creating PDF: {str(e)}")
+                                st.write("PDF generation failed, but you can copy the text above.")
+
                         
 
             # Step 5: Show conversation + follow-up chat
