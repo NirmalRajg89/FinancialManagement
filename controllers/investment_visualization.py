@@ -46,41 +46,41 @@ def get_dark_base():
     }
 
 
-# -------------------- ECHARTS CHARTS -------------------- #
-def echarts_investment_growth(investment_data):
-    months = 20 * 12
-    x_data = list(range(months + 1))
-    base = get_dark_base()
-    color_palette = ['#73C0DE', '#FAC858', '#EE6666', '#91CC75', '#5470C6', '#3BA272']
+# # -------------------- ECHARTS CHARTS -------------------- #
+# def echarts_investment_growth(investment_data):
+#     months = 20 * 12
+#     x_data = list(range(months + 1))
+#     base = get_dark_base()
+#     color_palette = ['#73C0DE', '#FAC858', '#EE6666', '#91CC75', '#5470C6', '#3BA272']
 
-    series_data = []
-    for option, data in investment_data.items():
-        _, values, _ = calculate_compound_growth(
-            data['monthly_contribution'],
-            data['annual_return'] / 100,
-            months
-        )
-        series_data.append({
-            "name": f"{option} (${values[-1]:,.0f})",
-            "type": "line",
-            "smooth": True,
-            "symbol": "none",
-            "lineStyle": {"width": 3},
-            "data": [round(v, 2) for v in values],
-        })
+#     series_data = []
+#     for option, data in investment_data.items():
+#         _, values, _ = calculate_compound_growth(
+#             data['monthly_contribution'],
+#             data['annual_return'] / 100,
+#             months
+#         )
+#         series_data.append({
+#             "name": f"{option} (${values[-1]:,.0f})",
+#             "type": "line",
+#             "smooth": True,
+#             "symbol": "none",
+#             "lineStyle": {"width": 3},
+#             "data": [round(v, 2) for v in values],
+#         })
 
-    option = {
-        **base,
-        "color": color_palette,
-        "title": {"text": "Investment Growth Comparison Over Time", "textStyle": {"color": "#fff"}},
-        "tooltip": {"trigger": "axis", "backgroundColor": "#222", "textStyle": {"color": "#fff"}},
-        "legend": {"type": "scroll", "top": "bottom", "textStyle": {"color": "#ccc"}},
-        "xAxis": {**base["xAxis"], "type": "category", "name": "Months", "data": x_data},
-        "yAxis": {**base["yAxis"], "type": "value", "name": "Portfolio Value ($)"},
-        "series": series_data,
-    }
+#     option = {
+#         **base,
+#         "color": color_palette,
+#         "title": {"text": "Investment Growth Comparison Over Time", "textStyle": {"color": "#fff"}},
+#         "tooltip": {"trigger": "axis", "backgroundColor": "#222", "textStyle": {"color": "#fff"}},
+#         "legend": {"type": "scroll", "top": "bottom", "textStyle": {"color": "#ccc"}},
+#         "xAxis": {**base["xAxis"], "type": "category", "name": "Months", "data": x_data},
+#         "yAxis": {**base["yAxis"], "type": "value", "name": "Portfolio Value ($)"},
+#         "series": series_data,
+#     }
 
-    st_echarts(option, height="600px", key=f"growth_chart_dark{int(time.time()*1000)}")
+#     st_echarts(option, height="600px", key=f"growth_chart_dark{int(time.time()*1000)}")
 
 
 def echarts_contribution_pie(investment_data):
@@ -94,7 +94,12 @@ def echarts_contribution_pie(investment_data):
     option = {
         **base,
         "title": {"text": "Monthly Contribution Distribution", "left": "center", "textStyle": {"color": "#fff"}},
-        "tooltip": {"trigger": "item", "backgroundColor": "#222", "textStyle": {"color": "#fff"}},
+        "tooltip": {
+            "trigger": "item", 
+            "backgroundColor": "#222", 
+            "textStyle": {"color": "#fff"},
+            "formatter": "{b}"
+        },
         "legend": {"bottom": "0", "orient": "horizontal", "textStyle": {"color": "#ccc"}},
         "series": [{
             "name": "Monthly Contribution",
@@ -102,7 +107,7 @@ def echarts_contribution_pie(investment_data):
             "radius": ["40%", "70%"],
             "avoidLabelOverlap": True,
             "itemStyle": {"borderRadius": 10, "borderColor": "#0e1117", "borderWidth": 2},
-            "label": {"show": True, "formatter": "{b}\n{d}%"},
+            "label": {"show": True, "formatter": "{b}"},
             "emphasis": {"label": {"show": True, "fontSize": 16, "fontWeight": "bold"}},
             "data": series_data,
         }]
@@ -227,7 +232,6 @@ def display_investment_visualizations(investment_table_text, goal_amount):
             echarts_contribution_pie(investment_data)
         with col2:
             echarts_goal_progress(investment_data, goal_amount)
-        echarts_investment_growth(investment_data)
 
     except Exception as e:
         st.error(f"Error creating visualizations: {e}")
